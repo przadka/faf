@@ -37,6 +37,9 @@ def follow_up_then(date: str, message: str) -> str:
     key = get_env_var('IFTTT_KEY')
     url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
+    # remove this from dates like thisMonday, thisTuesday, etc. as FUT does not support them
+    date = date.replace("this", "")
+
     return post_to_webhook(url, "follow_up_then", {"date": date, "message": message})
 
 def self_note(message: str) -> str:
