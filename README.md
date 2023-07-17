@@ -1,14 +1,23 @@
 # Fire And Forget (FAF)
 
-FAF is a command line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and stores it directly in a Google Sheet for future actions. 
+FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and stores it directly in a Google Sheet for future actions. 
 
-FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All this without direct interaction with your email service or other APIs; it simply organizes actions into your Google Sheet via an IFTTT webhook. 
+FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All of this is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into your Google Sheet via an IFTTT webhook. 
+
+At the moment, this is more of a proof-of-concept rather than a production-ready tool, so please use it responsibly. I have already successfully integrated it with my GTD workflow, wrapping it with [Autokey](https://github.com/autokey/autokey), and processing the output in the Google Sheet.
 
 ## Features
 
 - **Text Processing**: Utilizes a large language model for processing and understanding input.
 - **Google Sheets Integration**: Communicates with Google Sheets through IFTTT, storing processed information for subsequent actions.
-- **Command Line Interface**: easy to integrate cli data input.
+- **Command Line Interface**: Easy to integrate with CLI data input.
+- **Grammar and Spell Checking**: The large language model will fix any typos and mistakes in your input, ensuring that the output passed further is in correct English.
+
+Currently, FAF recognizes the following requests:
+
+- Send a note to self, e.g., "Buy milk".
+- Send a [Follow Up Then](https://www.followupthen.com) message with a specific date or time reference, e.g., "Remind me to buy flowers for my wedding anniversary, this Monday".
+- Save a given URL for reviewing it later, e.g., "https://arxiv.org/abs/1706.03762".
 
 ## Getting Started
 
