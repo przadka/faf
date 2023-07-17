@@ -20,11 +20,12 @@ def post_to_webhook(url: str, command: str, payload: dict) -> str:
     else:
         status_message = f"Failure: Unexpected status code {response.status_code}."
         
-    return f"{status_message}({payload['message']})"
+    return f"{status_message}({payload})"
 
 def follow_up_then(date: str, message: str) -> str:
     """
-    Send a follow-up reminder with the given date and message.
+    Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or
+    some time reference like "tomorrow" or "in 2 days".
 
     Args:
         date: Date of the follow-up in the format like "1August", "tomorrow3pm" or "in2days".
@@ -53,5 +54,20 @@ def self_note(message: str) -> str:
     url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
     return post_to_webhook(url, "note_to_self", {"message": message})
+
+def save_url(url: str) -> str:
+    """
+    Save a URL to a URL list so that I can review it later.
+
+    Args:
+        message: URL to append to the URL list.
+
+    Returns:
+        The response from the webhook concatenated with the input message.
+    """
+    key = get_env_var('IFTTT_KEY')
+    url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
+
+    return post_to_webhook(url, "save_url", {"url": url})
 
 

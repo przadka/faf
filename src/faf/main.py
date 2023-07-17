@@ -6,7 +6,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain import  LLMChain
 
 from helpers import get_env_var, validate_user_input
-from tools import follow_up_then, self_note
+from tools import follow_up_then, self_note, save_url
 
 # Define prefix and suffix for creating prompts
 prefix = """Answer the following questions as best you can.
@@ -20,8 +20,9 @@ Question: {input}
 
 fut = StructuredTool.from_function(follow_up_then, name="Follow Up Then")
 note = StructuredTool.from_function(self_note, name="Note to Self")
+url = StructuredTool.from_function(save_url, name="Save URL")
 
-tools = [note, fut]
+tools = [url, note, fut]
 
 tool_names = [tool.name for tool in tools]
 
