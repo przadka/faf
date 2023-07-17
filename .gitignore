@@ -1,0 +1,31 @@
+# .gitignore
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.sqlite
+
+# Test files
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints
