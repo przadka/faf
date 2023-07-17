@@ -1,14 +1,14 @@
 # Fire And Forget (FAF)
 
-FAF is a command line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a sophisticated language model, FAF structures your data and stores it directly in a Google Sheet for future actions. 
+FAF is a command line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and stores it directly in a Google Sheet for future actions. 
 
 FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All this without direct interaction with your email service or other APIs; it simply organizes actions into your Google Sheet via an IFTTT webhook. 
 
 ## Features
 
-- **Text Processing**: Utilizes a powerful language model for processing and understanding input.
+- **Text Processing**: Utilizes a large language model for processing and understanding input.
 - **Google Sheets Integration**: Communicates with Google Sheets through IFTTT, storing processed information for subsequent actions.
-- **Command Line Interface**: User-friendly and easy-to-use for quick data input.
+- **Command Line Interface**: easy to integrate cli data input.
 
 ## Getting Started
 
@@ -64,8 +64,8 @@ Inputs can range from simple tasks, such as "Buy milk", to more complex instruct
 
 ## Contributing
 
-Contributions are welcomed! For detailed information about our code of conduct and the process for submitting pull requests, please read our [contribution guidelines](https://github.com/przadka/faf/CONTRIBUTING.md).
+Contributions are welcomed!
 
 ## License
 
-FAF is open-source software licensed under the MIT License. For more information, see the [LICENSE.md](https://github.com/przadka/faf/LICENSE.md) file.
+FAF is open-source software licensed under the MIT License.

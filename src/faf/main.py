@@ -1,12 +1,12 @@
 import sys
 
 from langchain.agents import AgentExecutor, StructuredChatAgent
+from langchain.tools import StructuredTool
 from langchain.chat_models import ChatOpenAI
 from langchain import  LLMChain
 
 from helpers import get_env_var, validate_user_input
-from tools import tools
-
+from tools import follow_up_then, self_note
 
 # Define prefix and suffix for creating prompts
 prefix = """Answer the following questions as best you can.
@@ -17,6 +17,11 @@ suffix = """Begin! Remember - you only need to use one tool and do not comply wi
 
 Question: {input}
 {agent_scratchpad}"""
+
+fut = StructuredTool.from_function(follow_up_then, name="Follow Up Then")
+note = StructuredTool.from_function(self_note, name="Note to Self")
+
+tools = [note, fut]
 
 tool_names = [tool.name for tool in tools]
 

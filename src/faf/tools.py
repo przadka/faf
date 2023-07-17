@@ -1,7 +1,4 @@
-import os
-
 import requests
-from langchain.tools import StructuredTool
 from helpers import get_env_var
 
 def post_to_webhook(url: str, command: str, payload: dict) -> str:
@@ -57,7 +54,4 @@ def self_note(message: str) -> str:
 
     return post_to_webhook(url, "note_to_self", {"message": message})
 
-fut = StructuredTool.from_function(follow_up_then, name="Follow Up Then")
-note = StructuredTool.from_function(self_note, name="Note to Self")
 
-tools = [note, fut]
