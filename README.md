@@ -71,6 +71,11 @@ python src/faf/main.py "Your text input here"
 
 Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved in your designated Google Sheet for further actions.
 
+## Processing Output in Google Sheets
+
+FAF outputs processed commands as JSON strings in a Google Sheet. To further automate your workflow, you can use Google Apps Script to trigger actions based on these commands. You can review an example Google Sheet integration code in the `gsheets.gs` file in this repository.
+
+
 ## Contributing
 
 Contributions are welcomed!
