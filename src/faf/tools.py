@@ -39,6 +39,9 @@ def follow_up_then(date: str, message: str) -> str:
 
     # remove this from dates like thisMonday, thisTuesday, etc. as FUT does not support them
     date = date.replace("this", "")
+    
+    # remove extra spaces from the date
+    date = date.replace(" ", "")
 
     return post_to_webhook(url, "follow_up_then", {"date": date, "message": message})
 
