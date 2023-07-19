@@ -22,7 +22,7 @@ fut = StructuredTool.from_function(follow_up_then, name="Follow Up Then")
 note = StructuredTool.from_function(self_note, name="Note to Self")
 url = StructuredTool.from_function(save_url, name="Save URL")
 
-tools = [url, note, fut]
+tools = [note, fut, url]
 
 tool_names = [tool.name for tool in tools]
 

@@ -61,12 +61,12 @@ def self_note(message: str) -> str:
 
     return post_to_webhook(url, "note_to_self", {"message": message})
 
-def save_url(url: str) -> str:
+def save_url(user_url: str) -> str:
     """
-    Save a URL to a URL list so that I can review it later.
+    Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
     Args:
-        message: URL to append to the URL list.
+        user_url: URL to append to the URL list.
 
     Returns:
         The response from the webhook concatenated with the input message.
@@ -74,6 +74,6 @@ def save_url(url: str) -> str:
     key = get_env_var('IFTTT_KEY')
     url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
-    return post_to_webhook(url, "save_url", {"url": url})
+    return post_to_webhook(url, "save_url", {"url": user_url})
 
 
