@@ -1,15 +1,15 @@
 # Fire And Forget (FAF)
 
-FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and stores it directly in a Google Sheet for future actions. 
+FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then imported into a Google Sheet for future actions. 
 
-FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All of this is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into your Google Sheet via an IFTTT webhook. 
+FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All of this is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into JSON files ready to be processed further.
 
 At the moment, this is more of a proof-of-concept rather than a production-ready tool, so please use it responsibly. I have already successfully integrated it with my GTD workflow, wrapping it with [Autokey](https://github.com/autokey/autokey), and processing the output in the Google Sheet.
 
 ## Features
 
 - **Text Processing**: Utilizes a large language model for processing and understanding input.
-- **Google Sheets Integration**: Communicates with Google Sheets through IFTTT, storing processed information for subsequent actions.
+- **JSON File Output**: Stores processed information as JSON files that can be uploaded to cloud storage systems like Dropbox for further processing.
 - **Command Line Interface**: Easy to integrate with CLI data input.
 - **Grammar and Spell Checking**: The large language model will fix any typos and mistakes in your input, ensuring that the output passed further is in correct English.
 
@@ -28,9 +28,8 @@ This section provides the instructions necessary to get FAF up and running on yo
 Before getting started, make sure you have the following:
 
 - Python 3.6 or later
-- IFTTT key
 - OpenAI key for Langchain
-- An IFTTT webhook integration that saves given URL requests in a Google Sheet
+- A cloud storage account, such as Dropbox, for uploading and storing the JSON output files
 
 ### Installation
 
@@ -58,7 +57,7 @@ Before getting started, make sure you have the following:
 
     ```bash
     export OPENAI_API_KEY=your_openai_api_key
-    export IFTTT_KEY=your_ifttt_key
+    export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
     ```
 
 ### Usage
@@ -69,12 +68,11 @@ Once your environment is set up and the necessary environment variables are defi
 python src/faf/main.py "Your text input here"
 ```
 
-Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved in your designated Google Sheet for further actions.
+Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved as JSON files, which can be uploaded to your cloud storage for further actions.
 
-### Processing output in Google Sheets
+### Processing JSON files in Google Sheets
 
-FAF outputs processed commands as JSON strings in a Google Sheet. To further automate your workflow, you can use Google Apps Script to trigger actions based on these commands. You can review an example Google Sheet integration code in the `gsheets.gs` file in this repository.
-
+FAF outputs processed commands as JSON files. These can be uploaded to your cloud storage solution, and then imported into a Google Sheet for further processing. To automate this process, you can use Google Apps Script or a similar tool to trigger actions based on these commands. You can review an example Google Sheet integration code in the `gsheets.gs` file in this repository.
 
 ## Contributing
 

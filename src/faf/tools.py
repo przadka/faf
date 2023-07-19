@@ -1,26 +1,35 @@
 import requests
-from helpers import get_env_var
+import json
+import os
+from datetime import datetime
 
-def post_to_webhook(url: str, command: str, payload: dict) -> str:
+
+def write_to_file(command: str, payload: dict) -> str:
     data = {
         "command": command,
         "payload": payload
     }
 
-    response = requests.post(url, json=data)
+    # get the output directory from environment variable
+    directory = os.getenv('FAF_JSON_OUTPUT_PATH')
 
-    if response.status_code == 200:
-        status_message = f"Success: assistant webhook called successfully for {command}."
-    elif response.status_code == 400:
-        status_message = "Failure: Bad request, please check the sent data."
-    elif response.status_code == 401:
-        status_message = "Failure: Unauthorized, please check your authentication."
-    elif response.status_code == 404:
-        status_message = "Failure: URL not found, please check the webhook URL."
-    else:
-        status_message = f"Failure: Unexpected status code {response.status_code}."
+    # if directory is not set, use project root directory
+    if directory is None:
+        directory = os.path.dirname(os.path.abspath(__file__))
+
+    # create directory if it does not exist
+    os.makedirs(directory, exist_ok=True)
+
+    # use current timestamp to generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{command}.json"
+
+    # write the data to the file
+    with open(os.path.join(directory, filename), 'w') as outfile:
+        json.dump(data, outfile)
         
-    return f"{status_message}({payload})"
+    return f"Success: Data written to {filename} in directory {directory}."
+
 
 def follow_up_then(date: str, message: str) -> str:
     """
@@ -32,10 +41,8 @@ def follow_up_then(date: str, message: str) -> str:
         message: Message to send.
 
     Returns:
-        The response from the webhook concatenated with the input message.
+        Status message.
     """
-    key = get_env_var('IFTTT_KEY')
-    url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
     # remove this from dates like thisMonday, thisTuesday, etc. as FUT does not support them
     date = date.replace("this", "")
@@ -43,25 +50,25 @@ def follow_up_then(date: str, message: str) -> str:
     # remove extra spaces from the date
     date = date.replace(" ", "")
 
-    return post_to_webhook(url, "follow_up_then", {"date": date, "message": message})
+    return write_to_file("follow_up_then", {"date": date, "message": message})
 
-def self_note(message: str) -> str:
+
+def user_note(message: str) -> str:
     """
-    Send a note to self email with the given message.
+    Send a note to user with the given message.
     Useful for simple todos, reminders and short-term follow ups.
 
     Args:
         message: Message to send.
 
     Returns:
-        The response from the webhook concatenated with the input message.
+        Status message.
     """
-    key = get_env_var('IFTTT_KEY')
-    url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
-    return post_to_webhook(url, "note_to_self", {"message": message})
+    return write_to_file("note_to_self", {"message": message})
 
-def save_url(user_url: str) -> str:
+
+def save_url(url: str) -> str:
     """
     Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
@@ -71,9 +78,8 @@ def save_url(user_url: str) -> str:
     Returns:
         The response from the webhook concatenated with the input message.
     """
-    key = get_env_var('IFTTT_KEY')
-    url = f"https://maker.ifttt.com/trigger/assistant_requested/json/with/key/{key}"
 
-    return post_to_webhook(url, "save_url", {"url": user_url})
+    return write_to_file("save_url", {"url": url})
+
 
 
