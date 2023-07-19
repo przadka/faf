@@ -16,6 +16,7 @@ dist/
 *.pid
 *.gz
 *.sqlite
+*.spec
 
 # Test files
 .tox/
