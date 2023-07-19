@@ -9,6 +9,7 @@ def package(session: Session) -> None:
         "--add-data=/home/michal/.virtualenvs/langchain/lib/python3.10/site-packages/langchain/chains/llm_summarization_checker/prompts/:langchain/chains/llm_summarization_checker/prompts/",
         "--add-data=./src/faf/helpers.py:./",
         "--add-data=./src/faf/tools.py:./",
+         "-n", "faf",
         "./src/faf/main.py",
         external=True,
     )
