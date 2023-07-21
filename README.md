@@ -1,4 +1,4 @@
-```
+
 # Fire And Forget (FAF)
 
 FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then processed further with [Zapier](https://zapier.com)) or other automation tools. 
