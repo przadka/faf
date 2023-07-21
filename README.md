@@ -35,13 +35,13 @@ Before getting started, make sure you have the following:
 
 1. **Clone the repository:**
 
-    ```bash
+    ```
     git clone https://github.com/przadka/faf.git
     ```
 
 2. **Set up a virtual environment and activate it:**
 
-    ```bash
+    ```
     pip install virtualenv
     virtualenv venv
     source venv/bin/activate
@@ -49,7 +49,7 @@ Before getting started, make sure you have the following:
 
 3. **Install the necessary dependencies:**
 
-    ```bash
+    ```
     pip install -r requirements.txt
     ```
 
@@ -57,7 +57,7 @@ Before getting started, make sure you have the following:
 
 FAF uses two environment variables: 
 
-    ```bash
+    ```
     export OPENAI_API_KEY=your_openai_api_key
     export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
     ```
@@ -68,7 +68,7 @@ FAF uses two environment variables:
 
 Once your environment is set up and the necessary environment variables are defined, you can use FAF like so:
 
-```bash
+```
 python src/faf/main.py "Your text input here"
 ```
 
