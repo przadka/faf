@@ -35,32 +35,32 @@ Before getting started, make sure you have the following:
 
 1. **Clone the repository:**
 
-    ```
-    git clone https://github.com/przadka/faf.git
-    ```
+```
+git clone https://github.com/przadka/faf.git
+```
 
 2. **Set up a virtual environment and activate it:**
 
-    ```
-    pip install virtualenv
-    virtualenv venv
-    source venv/bin/activate
-    ```
+```
+pip install virtualenv
+virtualenv venv
+source venv/bin/activate
+```
 
 3. **Install the necessary dependencies:**
 
-    ```
-    pip install -r requirements.txt
-    ```
+```
+pip install -r requirements.txt
+```
 
 4. **Set the required environment variables:**
 
 FAF uses two environment variables: 
 
-    ```
-    export OPENAI_API_KEY=your_openai_api_key
-    export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
-    ```
+```
+export OPENAI_API_KEY=your_openai_api_key
+export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
+```
 
 `OPENAI_API_KEY` is your unique OpenAI API key necessary for language model processing. `FAF_JSON_OUTPUT_PATH` specifies the path to the folder where you want the output JSON files to be stored.
 
