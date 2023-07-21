@@ -32,7 +32,7 @@ tool_names = [tool.name for tool in tools]
 prompt = StructuredChatAgent.create_prompt(
     tools, prefix=prefix, suffix=suffix, input_variables=["input", "agent_scratchpad"]
 )
-llm_chain = LLMChain(llm=ChatOpenAI(temperature=0, model="gpt-3.5-turbo"), prompt=prompt)
+llm_chain = LLMChain(llm=ChatOpenAI(temperature=0, model="gpt-4"), prompt=prompt)
 
 # Create a StructuredChatAgent and an AgentExecutor for running the agent with our tools
 agent = StructuredChatAgent(llm_chain=llm_chain, allowed_tools=tool_names)
