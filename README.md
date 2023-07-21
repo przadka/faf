@@ -1,6 +1,7 @@
+```
 # Fire And Forget (FAF)
 
-FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then imported into a Google Sheet for future actions. 
+FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then processed further with [Zapier](https://zapier.com)) or other automation tools. 
 
 FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All of this is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into JSON files ready to be processed further.
 
@@ -29,7 +30,6 @@ Before getting started, make sure you have the following:
 
 - Python 3.6 or later
 - OpenAI key for Langchain
-- A cloud storage account, such as Dropbox, for uploading and storing the JSON output files
 
 ### Installation
 
@@ -55,10 +55,14 @@ Before getting started, make sure you have the following:
 
 4. **Set the required environment variables:**
 
+FAF uses two environment variables: 
+
     ```bash
     export OPENAI_API_KEY=your_openai_api_key
     export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
     ```
+
+`OPENAI_API_KEY` is your unique OpenAI API key necessary for language model processing. `FAF_JSON_OUTPUT_PATH` specifies the path to the folder where you want the output JSON files to be stored.
 
 ### Usage
 
@@ -70,9 +74,13 @@ python src/faf/main.py "Your text input here"
 
 Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved as JSON files, which can be uploaded to your cloud storage for further actions.
 
-### Processing JSON files in Google Sheets
+### Example workflow
 
-FAF outputs processed commands as JSON files. These can be uploaded to your cloud storage solution, and then imported into a Google Sheet for further processing. To automate this process, you can use Google Apps Script or a similar tool to trigger actions based on these commands. You can review an example Google Sheet integration code in the `gsheets.gs` file in this repository.
+FAF serves as a link in a chain of automation tasks. After processing your input and saving it as JSON files, these files can be uploaded to your cloud storage solution, and then processed further. Here's a sample workflow for how you might use FAF:
+
+1. Using [Autokey](https://github.com/autokey/autokey), capture user input with a simple text window and pass this input to FAF. You can review a simple script that does that in `autokey.py`. By setting up the `FAF_JSON_OUTPUT_PATH` variable, make sure that the file is stored in a folder you wish, for example: `/home/john/Dropbox/faf`.
+2. Next, utilize a tool like Zapier to create a new row in a Google Sheet every time a new file is uploaded in your Dropbox 'faf' folder. The integration will add a new row to the Google Sheet, with the details from the file included in the new row.
+3. With each new row added to the Google Sheet, further process this input with a Google Apps Script, invoking relevant actions based on the nature of the input. An example Google Sheet integration code is available in the `gsheets.gs` file in this repository.
 
 ## Contributing
 
