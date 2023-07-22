@@ -1,42 +1,40 @@
 function processNewRow(e) {
   var spreadsheet = e.source;
-  
-  // get the sheet by name
   var sheet = spreadsheet.getSheetByName("FAFLog");
-  
-  // get the last row in the sheet
   var lastRow = sheet.getLastRow();
   
-  // get the 'JSON command' cell in the last row
-  var cell = sheet.getRange(lastRow, 5);
-  
-  // get the value of the cell
-  var cellValue = cell.getValue();
-  
-  // parse JSON string
-  var command;
-  try {
-    command = JSON.parse(cellValue);
-  } catch (error) {
-    // handle error
-    return;
-  }
-  
-  // process the command
-  switch(command.command) {
-    case "follow_up_then":
-      sendFollowUpEmail(command.payload);
-      break;
-    case "note_to_self":
-      sendSelfNoteEmail(command.payload);
-      break;
-    case "save_url":
-      saveUrl(command.payload);
-      break;
-    default:
-      // unknown command
+  var scriptProperties = PropertiesService.getScriptProperties();
+  var lastProcessedRow = Number(scriptProperties.getProperty('LAST_PROCESSED_ROW')) || 0;
+
+  if (lastRow > lastProcessedRow) {
+    for (var i = lastProcessedRow + 1; i <= lastRow; i++) {
+      var cell = sheet.getRange(i, 5);
+      var cellValue = cell.getValue();
+      var command;
+      try {
+        command = JSON.parse(cellValue);
+      } catch (error) {
+        return;
+      }
+      
+      // process the command
+      switch(command.command) {
+        case "follow_up_then":
+          sendFollowUpEmail(command.payload);
+          break;
+        case "note_to_self":
+          sendSelfNoteEmail(command.payload);
+          break;
+        case "save_url":
+          saveUrl(command.payload);
+          break;
+        default:
+      }
+    }
+    scriptProperties.setProperty('LAST_PROCESSED_ROW', lastRow.toString());
   }
 }
+
 
 function sendFollowUpEmail(payload) {
   var date = payload.date;
