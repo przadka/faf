@@ -1,9 +1,8 @@
-
 # Fire And Forget (FAF)
 
 FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then processed further with [Zapier](https://zapier.com)) or other automation tools. 
 
-FAF enables you to take quick notes, schedule follow-ups, and more, saving precious time in your day. All of this is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into JSON files ready to be processed further.
+FAF enables you to take quick notes, schedule follow-ups, and more, saving some time in your day. This is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into JSON files ready to be processed further.
 
 At the moment, this is more of a proof-of-concept rather than a production-ready tool, so please use it responsibly. I have already successfully integrated it with my GTD workflow, wrapping it with [Autokey](https://github.com/autokey/autokey), and processing the output in the Google Sheet.
 
@@ -73,6 +72,16 @@ python src/faf/main.py "Your text input here"
 ```
 
 Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved as JSON files, which can be uploaded to your cloud storage for further actions.
+
+### Creating a single executable file
+
+If you wish to package FAF into a single executable file for easier distribution or deployment across your operating system, follow the steps below:
+
+```
+nox -s package
+```
+
+After running the command, you'll find the single file executable in the `dist` folder.
 
 ### Example workflow
 
