@@ -6,6 +6,20 @@ import json
 from helpers import get_env_var, validate_user_input
 from tools import follow_up_then, user_note, save_url
 
+def call_tool_function(action):
+    func_name = action['function']['name']
+    arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
+    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url}
+    
+    if func_name in tool_functions:
+        print(f"Calling {func_name} with arguments: ", arguments)
+        return {
+            "tool_call_id": action['id'],
+            "output": tool_functions[func_name](**arguments)
+        }
+    else:
+        raise ValueError(f"Unknown function: {func_name}")
+    
 tools_list = [{
     "type": "function",
     "function": {
@@ -70,7 +84,6 @@ if __name__ == "__main__":
     
     try:
         # Check that the necessary environment variables are set
-        #openai_key = get_env_var('OPENAI_API_KEY')
         
         request = sys.argv[1]
         validate_user_input(request)
@@ -131,36 +144,9 @@ if __name__ == "__main__":
                 print("Function Calling")
                 required_actions = run_status.required_action.submit_tool_outputs.model_dump()
                 print(required_actions)
-                tool_outputs = []
 
-                for action in required_actions["tool_calls"]:
-                    func_name = action['function']['name']
-                    arguments = json.loads(action['function']['arguments'])
-                    
-                    if func_name == "follow_up_then":
-                        print("Calling follow_up_then with arguments: ", arguments)
-                        output = follow_up_then(date=arguments['date'], message=arguments['message'])
-                        tool_outputs.append({
-                            "tool_call_id": action['id'],
-                            "output": output
-                        })
-                    elif func_name == "user_note":
-                        print("Calling user_note with arguments: ", arguments)
-                        output = user_note(message=arguments['message'])
-                        tool_outputs.append({
-                            "tool_call_id": action['id'],
-                            "output": output
-                        })
-                    elif func_name == "save_url":
-                        print("Calling save_url with arguments: ", arguments)
-                        output = save_url(url=arguments['url'])
-                        tool_outputs.append({
-                            "tool_call_id": action['id'],
-                            "output": output
-                        })
-                    else:
-                        raise ValueError(f"Unknown function: {func_name}")
-                    
+                tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
+                        
                 print("Submitting outputs back to the Assistant...")
                 client.beta.threads.runs.submit_tool_outputs(
                     thread_id=thread.id,
