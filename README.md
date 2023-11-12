@@ -1,6 +1,6 @@
 # Fire And Forget (FAF)
 
-FAF is a command-line tool designed to streamline your GTD (Getting Things Done) workflow. By capturing and processing any text input using a large language model, FAF structures your data and saves it as a JSON object. These JSON files can be uploaded to Dropbox or another system of your choice and then processed further with [Zapier](https://zapier.com)) or other automation tools. 
+FAF is a versatile command-line tool tailored for productivity enthusiasts, developers, and anyone engaged in a Getting Things Done (GTD) approach. Designed to streamline your GTD workflow, FAF captures and processes any text input using a large language model, structuring your data and saving it as JSON objects. These JSON files can be uploaded to Dropbox or another system of your choice and then processed further with [Zapier](https://zapier.com) or other automation tools. 
 
 FAF enables you to take quick notes, schedule follow-ups, and more, saving some time in your day. This is accomplished without direct interaction with your email service or other APIs; it simply organizes actions into JSON files ready to be processed further.
 
@@ -12,6 +12,7 @@ At the moment, this is more of a proof-of-concept rather than a production-ready
 - **JSON File Output**: Stores processed information as JSON files that can be uploaded to cloud storage systems like Dropbox for further processing.
 - **Command Line Interface**: Easy to integrate with CLI data input.
 - **Grammar and Spell Checking**: The large language model will fix any typos and mistakes in your input, ensuring that the output passed further is in correct English.
+- **Minimal dependency**: Relies primarily on the native OpenAI Assistant API, ensuring a lightweight and efficient operation with minimal setup requirements.
 
 Currently, FAF recognizes the following requests:
 
@@ -27,8 +28,8 @@ This section provides the instructions necessary to get FAF up and running on yo
 
 Before getting started, make sure you have the following:
 
-- Python 3.6 or later
-- OpenAI key for Langchain
+- Python 3.6 or later.
+- OpenAI key for interacting with OpenAI API.
 
 ### Installation
 
