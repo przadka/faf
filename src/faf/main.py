@@ -28,14 +28,14 @@ tools_list = [{
 Additional contraits for the date:
 
 - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
-- Do not user "in a week", "in two weeks" or "in a month" replace them with "1week",  "2weeks" and "1month" respectively. 
+- Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
 - Date cannot have any spaces, dots or commas.""",
         "parameters": {
             "type": "object",
             "properties": {
                 "date": {
                     "type": "string",
-                    "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or 'in2days'."
+                    "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or '2weeks'."
                 },
                 "message": {
                     "type": "string",
