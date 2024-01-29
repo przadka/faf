@@ -95,7 +95,15 @@ if __name__ == "__main__":
         # Step 1: Create an Assistant
         assistant = client.beta.assistants.create(
             name="Fire And Forget Assistant",
-            instructions="You are a personal assistant, helping the user to manage their schedule. You use various tools to process follow ups, set reminders, collect URLs and schedule calendar events. Note that the user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc. Never replace user input with URLs or other links. Always perform action on the user input and send the result back to the user.",
+            instructions="""
+            You are a personal assistant, helping the user to manage their schedule. You use various tools to process follow ups, set reminders, collect URLs and schedule calendar events.
+            
+            RULES:
+             - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
+             - Never replace user input with URLs or other links.
+             - Always perform action on the user input and send the result back to the user.
+             - If unsure which tool to use, then use the user_note tool.
+            """,
             tools=tools_list,
             model="gpt-4-1106-preview",
         )
