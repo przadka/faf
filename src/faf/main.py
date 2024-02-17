@@ -4,12 +4,12 @@ import openai
 import json
 
 from helpers import get_env_var, validate_user_input
-from tools import follow_up_then, user_note, save_url
+from tools import follow_up_then, user_note, save_url, va_request
 
 def call_tool_function(action):
     func_name = action['function']['name']
     arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
-    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url}
+    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
     
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
@@ -33,6 +33,10 @@ Additional contraits for the date:
         "parameters": {
             "type": "object",
             "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Full prompt provided by the user."
+                },
                 "date": {
                     "type": "string",
                     "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or '2weeks'."
@@ -42,7 +46,7 @@ Additional contraits for the date:
                     "description": "Message to send."
                 }
             },
-            "required": ["date", "message"]
+            "required": ["prompt", "date", "message"]
         }
     }
 }, {
@@ -53,12 +57,16 @@ Additional contraits for the date:
         "parameters": {
             "type": "object",
             "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Full prompt provided by the user."
+                },
                 "message": {
                     "type": "string",
                     "description": "Message to send."
                 }
             },
-            "required": ["message"]
+            "required": ["prompt", "message"]
         }
     }
 }, {
@@ -69,12 +77,40 @@ Additional contraits for the date:
         "parameters": {
             "type": "object",
             "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Full prompt provided by the user."
+                },
                 "url": {
                     "type": "string",
                     "description": "URL to append to the URL list."
                 }
             },
-            "required": ["url"]
+            "required": ["prompt", "url"]
+        }
+    }
+}, {
+    "type": "function",
+    "function": {
+        "name": "va_request",
+        "description": """Request for virtual assistant. Use only if the input explicitly mentions virtual assistant or VA for short.""",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Full prompt provided by the user."
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Title of the request, used as a Trello card title. Keep it short."
+                },
+                "request": {
+                    "type": "string",
+                    "description": "Request to send to the virtual assistant."
+                }
+            },
+            "required": ["prompt", "title", "request"]
         }
     }
 }
@@ -101,7 +137,9 @@ if __name__ == "__main__":
             RULES:
              - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
              - Never replace user input with URLs or other links.
+             - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
              - Always perform action on the user input and send the result back to the user.
+             - If only URL is provided, then ALWAYS use the save_url tool.
              - If unsure which tool to use, then use the user_note tool.
             """,
             tools=tools_list,

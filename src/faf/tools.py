@@ -3,8 +3,9 @@ import os
 from datetime import datetime
 
 
-def write_to_file(command: str, payload: dict) -> str:
+def write_to_file(prompt:str, command: str, payload: dict) -> str:
     data = {
+        "prompt": prompt,
         "command": command,
         "payload": payload
     }
@@ -30,7 +31,7 @@ def write_to_file(command: str, payload: dict) -> str:
     return f"Success: Data written to {filename} in directory {directory}."
 
 
-def follow_up_then(date: str, message: str) -> str:
+def follow_up_then(prompt:str, date: str, message: str) -> str:
     """
     Send a follow-up reminder with the given date and message.
     Use only if there is a specific date provided or
@@ -42,6 +43,7 @@ def follow_up_then(date: str, message: str) -> str:
       - Date cannot have any spaces, dots or commas. 
 
     Args:
+        prompt: Full prompt provided by the user.
         date: Date of the follow-up in the format like "1August", "tomorrow3pm" or "in2days".
         message: Message to send.
 
@@ -58,36 +60,50 @@ def follow_up_then(date: str, message: str) -> str:
     date = date.replace(".", "")
     date = date.replace(",", "")
 
-    return write_to_file("follow_up_then", {"date": date, "message": message})
+    return write_to_file(prompt, "follow_up_then", {"date": date, "message": message})
 
 
-def user_note(message: str) -> str:
+def user_note(prompt:str, message: str) -> str:
     """
     Send a note to user with the given message.
     Useful for simple todos, reminders and short-term follow ups.
 
     Args:
+        prompt: Full prompt provided by the user.
         message: Message to send.
 
     Returns:
         Status message.
     """
 
-    return write_to_file("note_to_self", {"message": message})
+    return write_to_file(prompt, "note_to_self", {"message": message})
 
 
-def save_url(url: str) -> str:
+def save_url(prompt:str, url: str) -> str:
     """
     Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
     Args:
+        prompt: Full prompt provided by the user.
         user_url: URL to append to the URL list.
 
     Returns:
         The response from the webhook concatenated with the input message.
     """
 
-    return write_to_file("save_url", {"url": url})
+    return write_to_file(prompt, "save_url", {"url": url})
 
+def va_request(prompt:str, title:str, request: str) -> str:
+    """
+    Send a request to the VA with the given message. Use only if the input explicitly asks for a virtual assistant or VA.
 
+    Args:
+        prompt: Full prompt provided by the user.
+        title: Title of the request, used as a Trello card title. Keep it short.
+        request: Request to send.
+
+    Returns:
+        Status message.
+    """
+    return write_to_file(prompt, "va_request", {"title":title,"request": request})
 
