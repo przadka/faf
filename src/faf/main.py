@@ -93,7 +93,7 @@ Additional contraits for the date:
     "type": "function",
     "function": {
         "name": "va_request",
-        "description": """Request for virtual assistant. Use only if the input explicitly mentions virtual assistant or VA for short.""",
+        "description": """Request for virtual assistant. Use only if the input explicitly includes the word "virtual assistant" or "VA".""",
         "parameters": {
             "type": "object",
             "properties": {
@@ -140,6 +140,7 @@ if __name__ == "__main__":
              - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
              - Always perform action on the user input and send the result back to the user.
              - If only URL is provided, then ALWAYS use the save_url tool.
+             - Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
              - If unsure which tool to use, then use the user_note tool.
             """,
             tools=tools_list,

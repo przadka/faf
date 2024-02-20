@@ -70,7 +70,7 @@ def user_note(prompt:str, message: str) -> str:
 
     Args:
         prompt: Full prompt provided by the user.
-        message: Message to send.
+        message: Message to send. Should be based on the prompt, without any additional information.
 
     Returns:
         Status message.
@@ -96,6 +96,7 @@ def save_url(prompt:str, url: str) -> str:
 def va_request(prompt:str, title:str, request: str) -> str:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a virtual assistant or VA.
+    Use ONLY if the prompt includes the word "virtual assistant" or "VA".
 
     Args:
         prompt: Full prompt provided by the user.
@@ -105,5 +106,10 @@ def va_request(prompt:str, title:str, request: str) -> str:
     Returns:
         Status message.
     """
+
+    # check if the prompt includes the word "virtual assistant" or "VA"
+    if "virtual assistant" not in prompt.lower() and "va" not in prompt.lower():
+        return "Error: The prompt does not include the word 'virtual assistant' or 'VA'."
+    
     return write_to_file(prompt, "va_request", {"title":title,"request": request})
 
