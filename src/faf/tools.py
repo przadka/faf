@@ -91,6 +91,12 @@ def save_url(prompt:str, url: str) -> str:
         The response from the webhook concatenated with the input message.
     """
 
+    # check if the input is URL-like, starts with http or https, has a dot in the middle,
+    # and does not have any spaces
+
+    if not url.startswith("http") or not "." in url or " " in url:
+        return "Error: The input is not a valid URL." 
+    
     return write_to_file(prompt, "save_url", {"url": url})
 
 def va_request(prompt:str, title:str, request: str) -> str:

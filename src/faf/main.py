@@ -142,6 +142,7 @@ if __name__ == "__main__":
              - If only URL is provided, then ALWAYS use the save_url tool.
              - Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
              - If unsure which tool to use, then use the user_note tool.
+             - If other tools fail, then use the user_note tool.
             """,
             tools=tools_list,
             model="gpt-4-1106-preview",
