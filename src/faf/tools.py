@@ -113,9 +113,9 @@ def va_request(prompt:str, title:str, request: str) -> str:
         Status message.
     """
 
-    # check if the prompt includes the word "virtual assistant" or "VA"
-    if "virtual assistant" not in prompt.lower() and "va" not in prompt.lower():
-        return "Error: The prompt does not include the word 'virtual assistant' or 'VA'."
-    
-    return write_to_file(prompt, "va_request", {"title":title,"request": request})
+    # check if the prompt includes the word "virtual assistant" or "VA", as a separate word
+    if "virtual assistant" not in prompt.lower() and not re.search(r'\bva\b', prompt.lower()):
+        return "Error: The input does not explicitly ask for a virtual assistant or VA."
+        
+    return write_to_file(prompt, "va_request", {"title": title, "request": request})
 
