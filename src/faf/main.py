@@ -141,7 +141,7 @@ if __name__ == "__main__":
             instructions=f"""
             You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
             
-            RULES:
+            You MUST obey the following rules when responding to the user's input:
              - User name is {user_name}.
              - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
              - Never replace user input with URLs or other links.
