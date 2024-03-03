@@ -2,9 +2,16 @@ import sys
 import time
 import openai
 import json
+import os
+import dotenv
+
+# Load environment variables
+dotenv.load_dotenv()
 
 from helpers import get_env_var, validate_user_input
 from tools import follow_up_then, user_note, save_url, va_request
+
+user_name = get_env_var("FAF_USER_NAME")
 
 def call_tool_function(action):
     func_name = action['function']['name']
@@ -131,10 +138,11 @@ if __name__ == "__main__":
         # Step 1: Create an Assistant
         assistant = client.beta.assistants.create(
             name="Fire And Forget Assistant",
-            instructions="""
-            You are a personal assistant, helping the user to manage their schedule. You use various tools to process follow ups, set reminders, collect URLs and schedule calendar events.
+            instructions=f"""
+            You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
             
             RULES:
+             - User name is {user_name}.
              - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
              - Never replace user input with URLs or other links.
              - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
