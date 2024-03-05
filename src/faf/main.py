@@ -4,15 +4,27 @@ import openai
 import json
 import os
 import dotenv
+from helpers import get_env_var, validate_user_input
+from tools import follow_up_then, user_note, save_url, va_request
 
 # Load environment variables
 dotenv.load_dotenv()
 
-from helpers import get_env_var, validate_user_input
-from tools import follow_up_then, user_note, save_url, va_request
+# Constants
+OPENAI_MODEL = "gpt-4-1106-preview"
 
-user_name = get_env_var("FAF_USER_NAME")
+# Load user name and custom rules
+USER_NAME = get_env_var("FAF_USER_NAME") or "unknown"
 
+# Load custom rules md file, default to None if not set
+try:
+    CUSTOM_RULES_FILE = get_env_var("FAF_CUSTOM_RULES_FILE")
+    with open(CUSTOM_RULES_FILE, "r") as file:
+        custom_rules = file.read()
+except OSError:
+    CUSTOM_RULES_FILE = None
+    custom_rules = ""
+ 
 def call_tool_function(action):
     func_name = action['function']['name']
     arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
@@ -26,7 +38,10 @@ def call_tool_function(action):
         }
     else:
         raise ValueError(f"Unknown function: {func_name}")
-    
+
+
+
+
 tools_list = [{
     "type": "function",
     "function": {
@@ -132,28 +147,33 @@ if __name__ == "__main__":
         validate_user_input(request)
         print("Current prompt: ", request, "\n")
 
+        instructions = f"""
+You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
+
+You MUST obey the following rules when responding to the user's input:
+
+- User name is {USER_NAME}.
+- The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
+- Never replace user input with URLs or other links.
+- If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
+- Always perform action on the user input and send the result back to the user.
+- If only URL is provided, then ALWAYS use the save_url tool.
+- Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
+- If unsure which tool to use, then use the user_note tool.
+- If other tools fail, then use the user_note tool.
+{custom_rules if CUSTOM_RULES_FILE else ""}
+"""
+        
+        print("Instructions:\n", instructions)
         # Initialize the client
         client = openai.OpenAI()
 
         # Step 1: Create an Assistant
         assistant = client.beta.assistants.create(
             name="Fire And Forget Assistant",
-            instructions=f"""
-            You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
-            
-            You MUST obey the following rules when responding to the user's input:
-             - User name is {user_name}.
-             - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
-             - Never replace user input with URLs or other links.
-             - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
-             - Always perform action on the user input and send the result back to the user.
-             - If only URL is provided, then ALWAYS use the save_url tool.
-             - Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
-             - If unsure which tool to use, then use the user_note tool.
-             - If other tools fail, then use the user_note tool.
-            """,
+            instructions=instructions,
             tools=tools_list,
-            model="gpt-4-1106-preview",
+            model=OPENAI_MODEL,
         )
 
         # Step 2: Create a Thread
