@@ -156,6 +156,7 @@ You MUST obey the following rules when responding to the user's input:
 - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
 - NEVER add any new information or new requests to the user's input. Correct only grammar, spelling, or punctuation mistakes.
 - Never replace user input with URLs or other links.
+- Use correct grammar and punctuation. Speak in a friendly and professional manner, with full sentences.
 - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
 - Always perform action on the user input and send the result back to the user.
 - If only URL is provided, then ALWAYS use the save_url tool.
@@ -164,8 +165,7 @@ You MUST obey the following rules when responding to the user's input:
 - If other tools fail, then use the user_note tool.
 {custom_rules if CUSTOM_RULES_FILE else ""}
 """
-        
-        print("Instructions:\n", instructions)
+
         # Initialize the client
         client = openai.OpenAI()
 
