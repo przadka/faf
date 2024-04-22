@@ -33,7 +33,7 @@ def call_tool_function(action):
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
         return {
-            "tool_call_id": action['id'],
+            "tool_call_name": func_name,
             "output": tool_functions[func_name](**arguments)
         }
     else:
@@ -186,14 +186,23 @@ You MUST obey the following rules when responding to the user's input:
 
         assistant_message = response.choices[0].message
         content = assistant_message.content
-        tc = assistant_message.tool_calls[0].function.arguments
-        actions = [arg.function.name for arg in assistant_message.tool_calls]
-        print(actions)
-        # print("Assistant: ", content)
-        # print(tc)
+        if content is not None: 
+            print('Assistant: '+ str(content))
 
-        # tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
+        actions = [{"name":arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
+        tool_outputs = [call_tool_function(action) for action in actions]
 
+        messages.append({"role":"user", "content":str(tool_outputs)})
+
+        print(messages)
+        response = client.chat.completions.create(
+            messages=messages,
+            model="gpt-3.5-turbo"
+        )
+
+        assistant_message = response.choices[0].message
+        content = assistant_message.content
+        print('Assistant: '+ str(content))
 
     except IndexError:
         print("No message provided. Exiting.")
