@@ -26,8 +26,8 @@ except OSError:
     custom_rules = ""
  
 def call_tool_function(action):
-    func_name = action['function']['name']
-    arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
+    func_name = action['name']
+    arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
     tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
     
     if func_name in tool_functions:
@@ -195,22 +195,6 @@ You MUST obey the following rules when responding to the user's input:
         # tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
 
 
-
-            #     print("Function Calling")
-            #     required_actions = run_status.required_action.submit_tool_outputs.model_dump()
-            #     print(required_actions)
-
-            #     tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
-                        
-            #     print("Submitting outputs back to the Assistant...")
-            #     client.beta.threads.runs.submit_tool_outputs(
-            #         thread_id=thread.id,
-            #         run_id=run.id,
-            #         tool_outputs=tool_outputs
-            #     )
-            # else:
-            #     print("Waiting for the Assistant to process...")
-            #     time.sleep(5)
     except IndexError:
         print("No message provided. Exiting.")
         exit(0)
