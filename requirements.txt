@@ -3,3 +3,4 @@ langchain
 openai
 pyinstaller
 python-dotenv
+litellm==1.35.19

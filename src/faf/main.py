@@ -1,17 +1,17 @@
 import sys
-import time
-from openai import OpenAI
+# from openai import OpenAI
 import json
 import os
 import dotenv
 from helpers import get_env_var, validate_user_input
 from tools import follow_up_then, user_note, save_url, va_request
+from litellm import completion
 
 # Load environment variables
 dotenv.load_dotenv()
 
 # Constants
-OPENAI_MODEL = "gpt-4-1106-preview"
+MODEL = "groq/llama3-70b-8192"
 
 # Load user name and custom rules
 USER_NAME = get_env_var("FAF_USER_NAME") or "unknown"
@@ -47,7 +47,7 @@ tools_list = [{
     "function": {
         "name": "follow_up_then",
         "description": """Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or some time reference like "tomorrow" or "in 2 days".
-Additional contraits for the date:
+Additional constraints for the date:
 
 - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
 - Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
@@ -175,13 +175,18 @@ You MUST obey the following rules when responding to the user's input:
             {"role": "user", "content": request}
         ]
 
-        client = OpenAI()
-
-        response = client.chat.completions.create(
+        # # pure OpenAI
+        # client = OpenAI()
+        # response = client.chat.completions.create(
+        #     messages=messages,
+        #     model="gpt-3.5-turbo",
+        #     tools = tools_list
+        # )
+        
+        response = completion(
             messages=messages,
-            model="gpt-3.5-turbo",
+            model=MODEL,
             tools = tools_list
-
         )
 
         assistant_message = response.choices[0].message
@@ -194,15 +199,22 @@ You MUST obey the following rules when responding to the user's input:
 
         messages.append({"role":"user", "content":str(tool_outputs)})
 
-        print(messages)
-        response = client.chat.completions.create(
-            messages=messages,
-            model="gpt-3.5-turbo"
-        )
+        # pure OpenAI
+        # response = client.chat.completions.create(
+        #     messages=messages,
+        #     model="gpt-3.5-turbo"
+        # )
+
+        response = completion(
+        model=MODEL,
+        messages=messages
+            )
 
         assistant_message = response.choices[0].message
         content = assistant_message.content
         print('Assistant: '+ str(content))
+
+
 
     except IndexError:
         print("No message provided. Exiting.")
