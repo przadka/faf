@@ -95,7 +95,7 @@ def save_url(prompt:str, url: str) -> str:
     # check if the input is URL-like, starts with http or https, has a dot in the middle,
     # and does not have any spaces
 
-    if not url.startswith("http") or not "." in url or " " in url:
+    if not (url.startswith("http") or  "." in url) or  " " in url:
         return "Error: The input is not a valid URL." 
     
     return write_to_file(prompt, "save_url", {"url": url})

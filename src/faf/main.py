@@ -1,17 +1,17 @@
 import sys
-import time
-import openai
+# from openai import OpenAI
 import json
 import os
 import dotenv
 from helpers import get_env_var, validate_user_input
 from tools import follow_up_then, user_note, save_url, va_request
+from litellm import completion
 
 # Load environment variables
 dotenv.load_dotenv()
 
 # Constants
-OPENAI_MODEL = "gpt-4-1106-preview"
+MODEL = "groq/llama3-70b-8192"
 
 # Load user name and custom rules
 USER_NAME = get_env_var("FAF_USER_NAME") or "unknown"
@@ -26,14 +26,14 @@ except OSError:
     custom_rules = ""
  
 def call_tool_function(action):
-    func_name = action['function']['name']
-    arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
+    func_name = action['name']
+    arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
     tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
     
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
         return {
-            "tool_call_id": action['id'],
+            "tool_call_name": func_name,
             "output": tool_functions[func_name](**arguments)
         }
     else:
@@ -47,7 +47,7 @@ tools_list = [{
     "function": {
         "name": "follow_up_then",
         "description": """Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or some time reference like "tomorrow" or "in 2 days".
-Additional contraits for the date:
+Additional constraints for the date:
 
 - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
 - Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
@@ -138,14 +138,18 @@ Additional contraits for the date:
 }
 ]
 
-if __name__ == "__main__":
-    
+def main():
     try:
         # Check that the necessary environment variables are set
         
         request = sys.argv[1]
         validate_user_input(request)
         print("Current prompt: ", request, "\n")
+
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
+
 
         instructions = f"""
 You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
@@ -166,73 +170,52 @@ You MUST obey the following rules when responding to the user's input:
 {custom_rules if CUSTOM_RULES_FILE else ""}
 """
 
-        # Initialize the client
-        client = openai.OpenAI()
+        messages = [
+            {"role": "system", "content": instructions},
+            {"role": "user", "content": request}
+        ]
 
-        # Step 1: Create an Assistant
-        assistant = client.beta.assistants.create(
-            name="Fire And Forget Assistant",
-            instructions=instructions,
-            tools=tools_list,
-            model=OPENAI_MODEL,
+        # # pure OpenAI
+        # client = OpenAI()
+        # response = client.chat.completions.create(
+        #     messages=messages,
+        #     model="gpt-3.5-turbo",
+        #     tools = tools_list
+        # )
+        
+        response = completion(
+            messages=messages,
+            model=MODEL,
+            tools = tools_list
         )
 
-        # Step 2: Create a Thread
-        thread = client.beta.threads.create()
+        assistant_message = response.choices[0].message
+        content = assistant_message.content
+        if content is not None: 
+            print('Assistant: '+ str(content))
 
-        # Step 3: Add a Message to a Thread
-        message = client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=request
-        )
+        actions = [{"name":arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
+        tool_outputs = [call_tool_function(action) for action in actions]
 
-        # Step 4: Run the Assistant
-        run = client.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=assistant.id
-        )
+        messages.append({"role":"user", "content":str(tool_outputs)})
 
-        while True:
-            # Wait for 5 seconds
-            time.sleep(5)
+        # pure OpenAI
+        # response = client.chat.completions.create(
+        #     messages=messages,
+        #     model="gpt-3.5-turbo"
+        # )
 
-            # Retrieve the run status
-            run_status = client.beta.threads.runs.retrieve(
-                thread_id=thread.id,
-                run_id=run.id
+        response = completion(
+        model=MODEL,
+        messages=messages
             )
 
-            # If run is completed, get messages
-            if run_status.status == 'completed':
-                messages = client.beta.threads.messages.list(
-                    thread_id=thread.id
-                )
+        assistant_message = response.choices[0].message
+        content = assistant_message.content
+        print('Assistant: '+ str(content))
 
-                # Loop through messages in reverse order and print content based on role
-                for msg in reversed(messages.data):
-                    role = msg.role
-                    content = msg.content[0].text.value
-                    print(f"{role.capitalize()}: {content}")
 
-                break
-            elif run_status.status == 'requires_action':
 
-                print("Function Calling")
-                required_actions = run_status.required_action.submit_tool_outputs.model_dump()
-                print(required_actions)
-
-                tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
-                        
-                print("Submitting outputs back to the Assistant...")
-                client.beta.threads.runs.submit_tool_outputs(
-                    thread_id=thread.id,
-                    run_id=run.id,
-                    tool_outputs=tool_outputs
-                )
-            else:
-                print("Waiting for the Assistant to process...")
-                time.sleep(5)
     except IndexError:
         print("No message provided. Exiting.")
         exit(0)
@@ -244,3 +227,7 @@ You MUST obey the following rules when responding to the user's input:
         print("Please set the necessary environment variables and try again.")
         exit(1)
 
+
+
+if __name__ == "__main__":
+    main()
