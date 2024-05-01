@@ -13,9 +13,9 @@ if not ret:
     
     os.environ['OPENAI_API_KEY'] = "<YOUR_OPENAI_API_KEY>"
     os.environ['FAF_JSON_OUTPUT_PATH'] = "PATH_TO_JSON_OUTPUT"
+    os.environ['FAF_USER_NAME'] = <YOUR_NAME>
+    os.environ['FAF_CUSTOM_RULES_FILE'] = <PATH_TO_CUSTOM_RULES_FILE>
     
     faf_path = "<PATH_TO_FAF_ON_YOUR_SYSTEM>"
      
     subprocess.run([faf_path, user_input], check=True)
-
-    
