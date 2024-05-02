@@ -4,43 +4,26 @@ import openai
 import json
 import os
 import dotenv
-from helpers import get_env_var, validate_user_input
+from datetime import datetime
+
+
 from tools import follow_up_then, user_note, save_url, va_request
 
 # Load environment variables
 dotenv.load_dotenv()
 
-# Constants
+# Configuration
 OPENAI_MODEL = "gpt-4-1106-preview"
+USER_NAME = os.getenv("FAF_USER_NAME") or "unknown"
+custom_rules = ""
 
-# Load user name and custom rules
-USER_NAME = get_env_var("FAF_USER_NAME") or "unknown"
-
-# Load custom rules md file, default to None if not set
 try:
-    CUSTOM_RULES_FILE = get_env_var("FAF_CUSTOM_RULES_FILE")
+    CUSTOM_RULES_FILE = os.getenv("FAF_CUSTOM_RULES_FILE")
+    
     with open(CUSTOM_RULES_FILE, "r") as file:
         custom_rules = file.read()
 except OSError:
     CUSTOM_RULES_FILE = None
-    custom_rules = ""
- 
-def call_tool_function(action):
-    func_name = action['function']['name']
-    arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
-    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
-    
-    if func_name in tool_functions:
-        print(f"Calling {func_name} with arguments: ", arguments)
-        return {
-            "tool_call_id": action['id'],
-            "output": tool_functions[func_name](**arguments)
-        }
-    else:
-        raise ValueError(f"Unknown function: {func_name}")
-
-
-
 
 tools_list = [{
     "type": "function",
@@ -137,102 +120,155 @@ Additional contraits for the date:
     }
 }
 ]
-
-if __name__ == "__main__":
+def call_tool_function(action):
+    func_name = action['function']['name']
+    arguments = json.loads(action['function']['arguments']) if isinstance(action['function']['arguments'], str) else action['function']['arguments']
+    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
     
+    if func_name in tool_functions:
+        print(f"Calling {func_name} with arguments: ", arguments)
+        return {
+            "tool_call_id": action['id'],
+            "output": tool_functions[func_name](**arguments)
+        }
+    else:
+        raise ValueError(f"Unknown function: {func_name}")
+
+
+def write_to_file(data: str) -> str:
+    """
+    Write the data to a JSON file in the output directory.
+
+    Args:
+        data: JSON string to write to the file.
+    
+    Returns:
+        Success message with the filename and directory where the file is saved.
+    """
     try:
-        # Check that the necessary environment variables are set
+        data_dict = json.loads(data)
+    except json.JSONDecodeError:
+        return "Error: Failed to decode 'data' from JSON. Ensure it is a properly formatted JSON string."
+
+    # Get the output directory from environment variable, default to current file's directory
+    directory = os.getenv('FAF_JSON_OUTPUT_PATH', os.path.dirname(os.path.abspath(__file__)))
+
+    # Create directory if it does not exist
+    os.makedirs(directory, exist_ok=True)
+
+    # Use current timestamp to generate a unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{data_dict.get('command', 'unknown')}.json"
+
+    # Write the data to the file
+    with open(os.path.join(directory, filename), 'w') as outfile:
+        json.dump(data_dict, outfile)
         
-        request = sys.argv[1]
-        validate_user_input(request)
-        print("Current prompt: ", request, "\n")
+    return f"Success: Data written to {filename} in directory {directory}."
 
-        instructions = f"""
-You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
 
-You MUST obey the following rules when responding to the user's input:
+def main():
+    faf_output = ""
+    try:
+            # Check that the necessary environment variables are set    
+            request = sys.argv[1]
+            
+            # Validate the user input
+            if not request:
+                raise ValueError("No input provided. Please provide a message.")
+            
+            print("Current prompt: ", request, "\n")
 
-- User name is {USER_NAME}.
-- The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
-- NEVER add any new information or new requests to the user's input. Correct only grammar, spelling, or punctuation mistakes.
-- Never replace user input with URLs or other links.
-- Use correct grammar and punctuation. Speak in a friendly and professional manner, with full sentences.
-- If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
-- Always perform action on the user input and send the result back to the user.
-- If only URL is provided, then ALWAYS use the save_url tool.
-- Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
-- If unsure which tool to use, then use the user_note tool.
-- If other tools fail, then use the user_note tool.
-{custom_rules if CUSTOM_RULES_FILE else ""}
-"""
+            instructions = f"""
+    You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
 
-        # Initialize the client
-        client = openai.OpenAI()
+    You MUST obey the following rules when responding to the user's input:
 
-        # Step 1: Create an Assistant
-        assistant = client.beta.assistants.create(
-            name="Fire And Forget Assistant",
-            instructions=instructions,
-            tools=tools_list,
-            model=OPENAI_MODEL,
-        )
+    - User name is {USER_NAME}.
+    - The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
+    - NEVER add any new information or new requests to the user's input. Correct only grammar, spelling, or punctuation mistakes.
+    - Never replace user input with URLs or other links.
+    - Use correct grammar and punctuation. Speak in a friendly and professional manner, with full sentences.
+    - If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
+    - Always perform action on the user input and send the result back to the user.
+    - If only URL is provided, then ALWAYS use the save_url tool.
+    - Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
+    - If unsure which tool to use, then use the user_note tool.
+    - If other tools fail, then use the user_note tool.
+    {custom_rules if CUSTOM_RULES_FILE else ""}
+    """
 
-        # Step 2: Create a Thread
-        thread = client.beta.threads.create()
+            # Initialize the client
+            client = openai.OpenAI()
 
-        # Step 3: Add a Message to a Thread
-        message = client.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=request
-        )
-
-        # Step 4: Run the Assistant
-        run = client.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=assistant.id
-        )
-
-        while True:
-            # Wait for 5 seconds
-            time.sleep(5)
-
-            # Retrieve the run status
-            run_status = client.beta.threads.runs.retrieve(
-                thread_id=thread.id,
-                run_id=run.id
+            # Step 1: Create an Assistant
+            assistant = client.beta.assistants.create(
+                name="Fire And Forget Assistant",
+                instructions=instructions,
+                tools=tools_list,
+                model=OPENAI_MODEL,
             )
 
-            # If run is completed, get messages
-            if run_status.status == 'completed':
-                messages = client.beta.threads.messages.list(
-                    thread_id=thread.id
-                )
+            # Step 2: Create a Thread
+            thread = client.beta.threads.create()
 
-                # Loop through messages in reverse order and print content based on role
-                for msg in reversed(messages.data):
-                    role = msg.role
-                    content = msg.content[0].text.value
-                    print(f"{role.capitalize()}: {content}")
+            # Step 3: Add a Message to a Thread
+            message = client.beta.threads.messages.create(
+                thread_id=thread.id,
+                role="user",
+                content=request
+            )
 
-                break
-            elif run_status.status == 'requires_action':
-
-                print("Function Calling")
-                required_actions = run_status.required_action.submit_tool_outputs.model_dump()
-                print(required_actions)
-
-                tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
-                        
-                print("Submitting outputs back to the Assistant...")
-                client.beta.threads.runs.submit_tool_outputs(
-                    thread_id=thread.id,
-                    run_id=run.id,
-                    tool_outputs=tool_outputs
-                )
-            else:
-                print("Waiting for the Assistant to process...")
+            # Step 4: Run the Assistant
+            run = client.beta.threads.runs.create(
+                thread_id=thread.id,
+                assistant_id=assistant.id
+            )
+            while True:
+                # Wait for 5 seconds
                 time.sleep(5)
+
+                # Retrieve the run status
+                run_status = client.beta.threads.runs.retrieve(
+                    thread_id=thread.id,
+                    run_id=run.id
+                )
+
+                # If run is completed, get messages
+                if run_status.status == 'completed':
+                    messages = client.beta.threads.messages.list(
+                        thread_id=thread.id
+                    )
+
+                    print("Final output:")
+                    print(faf_output)
+
+                    # Loop through messages in reverse order and print content based on role
+                    for msg in reversed(messages.data):
+                        role = msg.role
+                        content = msg.content[0].text.value
+                        print(f"{role.capitalize()}: {content}")
+
+                    break
+                elif run_status.status == 'requires_action':
+
+                    print("Function Calling")
+                    required_actions = run_status.required_action.submit_tool_outputs.model_dump()
+                    print(required_actions)
+
+                    tool_outputs = [call_tool_function(action) for action in required_actions["tool_calls"]]
+                    faf_output = tool_outputs[0]["output"]
+
+                    print("Submitting outputs back to the Assistant...")
+                    client.beta.threads.runs.submit_tool_outputs(
+                        thread_id=thread.id,
+                        run_id=run.id,
+                        tool_outputs=tool_outputs
+                    )
+                else:
+                    print("Waiting for the Assistant to process...")
+                    time.sleep(5)
+
     except IndexError:
         print("No message provided. Exiting.")
         exit(0)
@@ -244,3 +280,11 @@ You MUST obey the following rules when responding to the user's input:
         print("Please set the necessary environment variables and try again.")
         exit(1)
 
+
+    if faf_output:
+        write_to_file(faf_output)
+        
+if __name__ == "__main__":
+    main()
+    
+    

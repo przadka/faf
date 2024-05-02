@@ -1,36 +1,5 @@
-import json
-import os
 import re
-from datetime import datetime
-
-
-def write_to_file(prompt:str, command: str, payload: dict) -> str:
-    data = {
-        "prompt": prompt,
-        "command": command,
-        "payload": payload
-    }
-
-    # get the output directory from environment variable
-    directory = os.getenv('FAF_JSON_OUTPUT_PATH')
-
-    # if directory is not set, use project root directory
-    if directory is None:
-        directory = os.path.dirname(os.path.abspath(__file__))
-
-    # create directory if it does not exist
-    os.makedirs(directory, exist_ok=True)
-
-    # use current timestamp to generate unique filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{timestamp}_{command}.json"
-
-    # write the data to the file
-    with open(os.path.join(directory, filename), 'w') as outfile:
-        json.dump(data, outfile)
-        
-    return f"Success: Data written to {filename} in directory {directory}."
-
+import json
 
 def follow_up_then(prompt:str, date: str, message: str) -> str:
     """
@@ -49,7 +18,7 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
         message: Message to send.
 
     Returns:
-        Status message.
+        JSON string with all the data.
     """
 
     # the following shouln't be needed as the LLM already does knows the date specs
@@ -61,8 +30,17 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     date = date.replace(".", "")
     date = date.replace(",", "")
 
-    return write_to_file(prompt, "follow_up_then", {"date": date, "message": message})
+    tool_data = {
+        "prompt": prompt,
+        "command": "follow_up_then",
+        "payload": {
+            "date": date,
+            "message": message
+        }
+    }
 
+    # return the JSON object as a string
+    return json.dumps(tool_data)
 
 def user_note(prompt:str, message: str) -> str:
     """
@@ -74,10 +52,20 @@ def user_note(prompt:str, message: str) -> str:
         message: Message to send. Should be based on the prompt, without any additional information.
 
     Returns:
-        Status message.
+        JSON string with all the data.
     """
 
-    return write_to_file(prompt, "note_to_self", {"message": message})
+    tool_data = {
+        "prompt": prompt,
+        "command": "user_note",
+        "payload": {
+            "message": message
+        }
+    }
+
+    return json.dumps(tool_data)
+
+    # return write_to_file(prompt, "note_to_self", {"message": message})
 
 
 def save_url(prompt:str, url: str) -> str:
@@ -89,7 +77,7 @@ def save_url(prompt:str, url: str) -> str:
         user_url: URL to append to the URL list.
 
     Returns:
-        The response from the webhook concatenated with the input message.
+        JSON string with all the data.
     """
 
     # check if the input is URL-like, starts with http or https, has a dot in the middle,
@@ -98,8 +86,16 @@ def save_url(prompt:str, url: str) -> str:
     if not url.startswith("http") or not "." in url or " " in url:
         return "Error: The input is not a valid URL." 
     
-    return write_to_file(prompt, "save_url", {"url": url})
+    tool_data = {
+        "prompt": prompt,
+        "command": "save_url",
+        "payload": {
+            "url": url
+        }
+    }
 
+    return json.dumps(tool_data)
+    
 def va_request(prompt:str, title:str, request: str) -> str:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a virtual assistant or VA.
@@ -111,12 +107,23 @@ def va_request(prompt:str, title:str, request: str) -> str:
         request: Request to send.
 
     Returns:
-        Status message.
+        JSON string with all the data.
     """
 
     # check if the prompt includes the word "virtual assistant" or "VA", as a separate word
     if "virtual assistant" not in prompt.lower() and not re.search(r'\bva\b', prompt.lower()):
         return "Error: The input does not explicitly ask for a virtual assistant or VA."
+    
+    tool_data = {
+        "prompt": prompt,
+        "command": "va_request",
+        "payload": {
+            "title": title,
+            "request": request
+        }
+    }
+
+    return json.dumps(tool_data)
         
-    return write_to_file(prompt, "va_request", {"title": title, "request": request})
+    # return write_to_file(prompt, "va_request", {"title": title, "request": request})
 
