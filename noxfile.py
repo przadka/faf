@@ -6,8 +6,10 @@ def package(session: Session) -> None:
     session.install('-r', 'requirements.txt')
     session.run(
         "pyinstaller", "--onefile",
-        "--add-data=./src/faf/tools.py:./",
-         "-n", "faf",
+        "--hidden-import=tiktoken_ext.openai_public",
+        "--hidden-import=tiktoken_ext",
+        "--add-data=./src/faf/tools.py:./",  # Ensure paths are correctly set
+        "-n", "faf",
         "./src/faf/main.py",
         external=True,
     )
