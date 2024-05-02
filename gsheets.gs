@@ -22,7 +22,7 @@ function processNewRow(e) {
         case "follow_up_then":
           sendFollowUpEmail(command.payload);
           break;
-        case "note_to_self":
+        case "user_note":
           sendSelfNoteEmail(command.payload);
           break;
         case "save_url":
