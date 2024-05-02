@@ -244,7 +244,7 @@ def convert_to_json(request: str, user_name: str, custom_rules: str, model: str,
         'total_tokens': response.usage.total_tokens
     })
 
-    return json.dumps(output)
+    return output
 
 
 def main():
@@ -269,7 +269,7 @@ def main():
 
         # If there's output, print it prettily
         if output:
-            pprint(json.loads(output))
+            write_to_file(json.dumps(output))
 
     except ValueError as ve:
         print(str(ve))
