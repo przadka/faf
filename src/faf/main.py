@@ -170,26 +170,10 @@ def write_to_file(data: str) -> str:
     return f"Success: Data written to {filename} in directory {directory}."
 
 
-# separate assistant call as a function
+# convert user input to a JSON object, using LLM assistant to process the input
 
-def main():
-    try:
-        # Check that the necessary environment variables are set
-        
-        request = sys.argv[1]
-
-        # Validate the user input
-        if not request:
-            raise ValueError("No input provided. Please provide a message.")
-        
-        print("Current prompt: ", request, "\n")
-
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
-
-
-        instructions = f"""
+def convert_to_json(request):
+    instructions = f"""
 You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
 
 You MUST obey the following rules when responding to the user's input:
@@ -208,41 +192,60 @@ You MUST obey the following rules when responding to the user's input:
 {custom_rules if CUSTOM_RULES_FILE else ""}
 """
 
-        messages = [
-            {"role": "system", "content": instructions},
-            {"role": "user", "content": request}
-        ]
+    messages = [
+        {"role": "system", "content": instructions},
+        {"role": "user", "content": request}
+    ]
+    
+    response = completion(
+        messages=messages,
+        model=MODEL,
+        tools = tools_list
+    )
+
+    assistant_message = response.choices[0].message
+
+    content = assistant_message.content
+
+    if content is not None: 
+        print('Assistant: '+ str(content))
+
+    actions = [{"name":arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
+    tool_outputs = [call_tool_function(action) for action in actions]
+
+    output = tool_outputs[0]['output']
+
+    output = json.loads(output)
+
+    output['created'] = response.created
+    output['model'] = response.model
+    output['prompt_tokens'] = response.usage.prompt_tokens
+    output['completion_tokens'] = response.usage.completion_tokens
+    output['total_tokens'] = response.usage.total_tokens
+
+    return json.dumps(output)
+
+def main():
+    try:
+        # Check that the necessary environment variables are set
         
-        response = completion(
-            messages=messages,
-            model=MODEL,
-            tools = tools_list
-        )
+        request = sys.argv[1]
 
-        assistant_message = response.choices[0].message
+        # Validate the user input
+        if not request:
+            raise ValueError("No input provided. Please provide a message.")
+        
+        print("Current prompt: ", request, "\n")
 
-        pprint(assistant_message)
-        content = assistant_message.content
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
 
-        if content is not None: 
-            print('Assistant: '+ str(content))
-
-        actions = [{"name":arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
-        tool_outputs = [call_tool_function(action) for action in actions]
-
-        output = tool_outputs[0]['output']
-
-        # enrich the output with the metadata from litellm
-        output = json.loads(output)
-
-        output['created'] = response.created
-        output['model'] = response.model
-        output['prompt_tokens'] = response.usage.prompt_tokens
-        output['completion_tokens'] = response.usage.completion_tokens
-        output['total_tokens'] = response.usage.total_tokens
+        output = convert_to_json(request)
 
         if output:
-            write_to_file(json.dumps(output))
+            #write_to_file(json.dumps(output))
+            pprint(json.loads(output))
 
     except IndexError:
         print("No message provided. Exiting.")
