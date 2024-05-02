@@ -1,14 +1,12 @@
 from pprint import pprint
 import sys
-import time
-import openai
 import json
 import os
 import dotenv
 from datetime import datetime
 from litellm import completion
 
-
+from typing import List, Dict, Any
 
 from tools import follow_up_then, user_note, save_url, va_request
 
@@ -25,7 +23,7 @@ try:
     
     with open(CUSTOM_RULES_FILE, "r") as file:
         custom_rules = file.read()
-except OSError:
+except FileNotFoundError:
     CUSTOM_RULES_FILE = None
 
 tools_list = [{
@@ -137,129 +135,149 @@ def call_tool_function(action):
     else:
         raise ValueError(f"Unknown function: {func_name}")
 
-
 def write_to_file(data: str) -> str:
     """
-    Write the data to a JSON file in the output directory.
+    Writes the provided JSON string to a file in a specified output directory.
 
     Args:
-        data: JSON string to write to the file.
-    
+        data (str): JSON string to write to the file.
+
     Returns:
-        Success message with the filename and directory where the file is saved.
+        str: Success message with the filename and directory where the file is saved.
+    
+    Raises:
+        ValueError: If the data is not a valid JSON string.
     """
     try:
+        # Attempt to parse the JSON string to a dictionary
         data_dict = json.loads(data)
-    except json.JSONDecodeError:
-        return "Error: Failed to decode 'data' from JSON. Ensure it is a properly formatted JSON string."
+    except json.JSONDecodeError as e:
+        raise ValueError("Failed to decode 'data' from JSON. Ensure it is a properly formatted JSON string.") from e
 
-    # Get the output directory from environment variable, default to current file's directory
+    # Determine the output directory, defaulting to the current file's directory if not set
     directory = os.getenv('FAF_JSON_OUTPUT_PATH', os.path.dirname(os.path.abspath(__file__)))
 
-    # Create directory if it does not exist
+    # Ensure the directory exists
     os.makedirs(directory, exist_ok=True)
 
-    # Use current timestamp to generate a unique filename
+    # Generate a unique filename using the current timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{timestamp}_{data_dict.get('command', 'unknown')}.json"
 
+    # Construct the full path for the file
+    file_path = os.path.join(directory, filename)
+
     # Write the data to the file
-    with open(os.path.join(directory, filename), 'w') as outfile:
-        json.dump(data_dict, outfile)
-        
+    try:
+        with open(file_path, 'w') as outfile:
+            json.dump(data_dict, outfile)
+    except IOError as e:
+        raise IOError(f"Unable to write to the file {filename}.") from e
+
     return f"Success: Data written to {filename} in directory {directory}."
 
 
-# convert user input to a JSON object, using LLM assistant to process the input
 
-def convert_to_json(request):
+def convert_to_json(request: str, user_name: str, custom_rules: str, model: str, tools_list: List[Dict[str, Any]]) -> str:
+    """
+    Converts user requests into structured JSON using predefined LLM rules and functions.
+
+    Args:
+        request (str): The user input string.
+        user_name (str): The username fetched from the environment.
+        custom_rules (str): Additional rules loaded from a file.
+        model (str): The model identifier for the LLM.
+        tools_list (list): List of tools available for the LLM to use.
+
+    Returns:
+        str: A JSON string of the processed output including metadata.
+    """
+    # Define the instructions for the LLM based on the given parameters
     instructions = f"""
-You are a personal assistant, helping the user to manage their schedule and tasks. You use various tools to process follow ups, set reminders, collect URLs and contact personal assistant.
+    You are a personal assistant, helping the user to manage their schedule and tasks.
+    You use various tools to process follow ups, set reminders, collect URLs and contact the personal assistant.
+    
+    - User name is {user_name}.
+    - NEVER add any new information or requests to the user's input.
+    - Correct only grammar, spelling, or punctuation mistakes.
+    - Use correct grammar and punctuation.
+    - If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
+    - If only a URL is provided, ALWAYS use the 'save_url' tool.
+    - Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
+    - Use the 'user_note' tool if unsure which tool to apply or if others fail.
+    {custom_rules}
+    """
 
-You MUST obey the following rules when responding to the user's input:
-
-- User name is {USER_NAME}.
-- The user will sometimes talk as if they were giving instructions to you, but in fact they want you to send these instructions to them, either as reminders or follow ups etc.
-- NEVER add any new information or new requests to the user's input. Correct only grammar, spelling, or punctuation mistakes.
-- Never replace user input with URLs or other links.
-- Use correct grammar and punctuation. Speak in a friendly and professional manner, with full sentences.
-- If the user mentions a day of the week, or an exact date, then ALWAYS use the follow_up_then tool.
-- Always perform action on the user input and send the result back to the user.
-- If only URL is provided, then ALWAYS use the save_url tool.
-- Use the va_request tool ONLY if the user explicitly includes the word "virtual assistant" or "VA" in the prompt.
-- If unsure which tool to use, then use the user_note tool.
-- If other tools fail, then use the user_note tool.
-{custom_rules if CUSTOM_RULES_FILE else ""}
-"""
-
+    # Structure the messages as required by the completion function
     messages = [
         {"role": "system", "content": instructions},
         {"role": "user", "content": request}
     ]
-    
-    response = completion(
-        messages=messages,
-        model=MODEL,
-        tools = tools_list
-    )
 
-    assistant_message = response.choices[0].message
+    # Call the LLM completion function
+    try:
+        response = completion(messages=messages, model=model, tools=tools_list)
+        assistant_message = response.choices[0].message
+    except Exception as e:
+        return json.dumps({"error": "Failed to process input with LLM.", "details": str(e)})
 
+    # Extract content from the LLM response
     content = assistant_message.content
+    if content:
+        print('Assistant: ' + content)
 
-    if content is not None: 
-        print('Assistant: '+ str(content))
+    # Process tool calls from the LLM response
+    try:
+        actions = [{"name": arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
+        tool_outputs = [call_tool_function(action) for action in actions]
+        output = tool_outputs[0]['output']
+        output = json.loads(output)
+    except Exception as e:
+        return json.dumps({"error": "Failed to execute tool functions.", "details": str(e)})
 
-    actions = [{"name":arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
-    tool_outputs = [call_tool_function(action) for action in actions]
-
-    output = tool_outputs[0]['output']
-
-    output = json.loads(output)
-
-    output['created'] = response.created
-    output['model'] = response.model
-    output['prompt_tokens'] = response.usage.prompt_tokens
-    output['completion_tokens'] = response.usage.completion_tokens
-    output['total_tokens'] = response.usage.total_tokens
+    # Add metadata to the output
+    output.update({
+        'created': response.created,
+        'model': response.model,
+        'prompt_tokens': response.usage.prompt_tokens,
+        'completion_tokens': response.usage.completion_tokens,
+        'total_tokens': response.usage.total_tokens
+    })
 
     return json.dumps(output)
 
+
 def main():
     try:
-        # Check that the necessary environment variables are set
-        
-        request = sys.argv[1]
+        # Attempt to retrieve the user input from command line arguments
+        try:
+            request = sys.argv[1]
+        except IndexError:
+            print("No message provided. Exiting.")
+            sys.exit(0)
 
-        # Validate the user input
         if not request:
             raise ValueError("No input provided. Please provide a message.")
-        
-        print("Current prompt: ", request, "\n")
 
+        # Check for the necessary API key in environment variables
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
             raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
 
-        output = convert_to_json(request)
+        # Process the input to convert it to JSON
+        output = convert_to_json(request, USER_NAME, custom_rules, MODEL, tools_list)
 
+        # If there's output, print it prettily
         if output:
-            #write_to_file(json.dumps(output))
             pprint(json.loads(output))
 
-    except IndexError:
-        print("No message provided. Exiting.")
-        exit(0)
-    except ValueError as e:
-        print(str(e))
-        exit(1)
-    except EnvironmentError as e:
-        print(str(e))
+    except ValueError as ve:
+        print(str(ve))
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
         print("Please set the necessary environment variables and try again.")
-        exit(1)
-
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
-    
-    
