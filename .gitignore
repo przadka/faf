@@ -33,3 +33,11 @@ coverage.xml
 
 # environment
 .env
+
+# lambda package
+package/
+.aws-sam/
+deployment_package.zip
+event.json
+template.yml
+samconfig.toml
