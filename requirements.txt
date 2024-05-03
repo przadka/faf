@@ -1,6 +1,4 @@
 requests
-langchain
-openai
 pyinstaller
 python-dotenv
 litellm
