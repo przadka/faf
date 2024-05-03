@@ -1,126 +1,117 @@
-from pprint import pprint
 import sys
 import json
 import os
 import dotenv
 from datetime import datetime
-from litellm import completion
-
 from typing import List, Dict, Any
 
+from litellm import completion
 from tools import follow_up_then, user_note, save_url, va_request
 
-# Load environment variables
-dotenv.load_dotenv()
 
-# Configuration
-MODEL = "gpt-4-1106-preview"
-USER_NAME = os.getenv("FAF_USER_NAME") or "unknown"
-custom_rules = ""
+def tools_list():
+    """
+        Generate a list of tools available for the LLM to use.
+    """
 
-try:
-    CUSTOM_RULES_FILE = os.getenv("FAF_CUSTOM_RULES_FILE")
-    
-    with open(CUSTOM_RULES_FILE, "r") as file:
-        custom_rules = file.read()
-except FileNotFoundError:
-    CUSTOM_RULES_FILE = None
+    tools_list = [{
+        "type": "function",
+        "function": {
+            "name": "follow_up_then",
+            "description": """Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or some time reference like "tomorrow" or "in 2 days".
+    Additional constraints for the date:
 
-tools_list = [{
-    "type": "function",
-    "function": {
-        "name": "follow_up_then",
-        "description": """Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or some time reference like "tomorrow" or "in 2 days".
-Additional constraints for the date:
-
-- Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
-- Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
-- Date cannot have any spaces, dots or commas.""",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Full prompt provided by the user."
+    - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
+    - Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
+    - Date cannot have any spaces, dots or commas.""",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Full prompt provided by the user."
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or '2weeks'."
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message to send."
+                    }
                 },
-                "date": {
-                    "type": "string",
-                    "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or '2weeks'."
+                "required": ["prompt", "date", "message"]
+            }
+        }
+    }, {
+        "type": "function",
+        "function": {
+            "name": "user_note",
+            "description": """Send a note to user with the given message. Useful for simple todos, reminders and short-term follow ups.""",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Full prompt provided by the user."
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Message to send."
+                    }
                 },
-                "message": {
-                    "type": "string",
-                    "description": "Message to send."
-                }
-            },
-            "required": ["prompt", "date", "message"]
+                "required": ["prompt", "message"]
+            }
+        }
+    }, {
+        "type": "function",
+        "function": {
+            "name": "save_url",
+            "description": """Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.""",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Full prompt provided by the user."
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "URL to append to the URL list."
+                    }
+                },
+                "required": ["prompt", "url"]
+            }
+        }
+    }, {
+        "type": "function",
+        "function": {
+            "name": "va_request",
+            "description": """Request for virtual assistant. Use only if the input explicitly includes the word "virtual assistant" or "VA".""",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Full prompt provided by the user."
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Title of the request, used as a Trello card title. Keep it short."
+                    },
+                    "request": {
+                        "type": "string",
+                        "description": "Request to send to the virtual assistant."
+                    }
+                },
+                "required": ["prompt", "title", "request"]
+            }
         }
     }
-}, {
-    "type": "function",
-    "function": {
-        "name": "user_note",
-        "description": """Send a note to user with the given message. Useful for simple todos, reminders and short-term follow ups.""",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Full prompt provided by the user."
-                },
-                "message": {
-                    "type": "string",
-                    "description": "Message to send."
-                }
-            },
-            "required": ["prompt", "message"]
-        }
-    }
-}, {
-    "type": "function",
-    "function": {
-        "name": "save_url",
-        "description": """Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.""",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Full prompt provided by the user."
-                },
-                "url": {
-                    "type": "string",
-                    "description": "URL to append to the URL list."
-                }
-            },
-            "required": ["prompt", "url"]
-        }
-    }
-}, {
-    "type": "function",
-    "function": {
-        "name": "va_request",
-        "description": """Request for virtual assistant. Use only if the input explicitly includes the word "virtual assistant" or "VA".""",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "Full prompt provided by the user."
-                },
-                "title": {
-                    "type": "string",
-                    "description": "Title of the request, used as a Trello card title. Keep it short."
-                },
-                "request": {
-                    "type": "string",
-                    "description": "Request to send to the virtual assistant."
-                }
-            },
-            "required": ["prompt", "title", "request"]
-        }
-    }
-}
-]
+    ]
+
+    return tools_list
+
 def call_tool_function(action):
     func_name = action['name']
     arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
@@ -246,8 +237,94 @@ def convert_to_json(request: str, user_name: str, custom_rules: str, model: str,
 
     return output
 
+def load_configuration():
+
+    dotenv.load_dotenv()
+
+    MODEL = os.getenv("FAF_MODEL") or "gpt-4-1106-preview"
+    USER_NAME = os.getenv("FAF_USER_NAME") or "Unknown"
+    CUSTOM_RULES_FILE = os.getenv("FAF_CUSTOM_RULES_FILE") or ""
+
+    CUSTOM_RULES = ""
+    
+    try:
+        with open(CUSTOM_RULES_FILE, "r") as file:
+            CUSTOM_RULES = file.read()
+    except FileNotFoundError:
+        CUSTOM_RULES_FILE = None
+    
+    return MODEL, USER_NAME, CUSTOM_RULES
+
+def lambda_handler(event, context):
+    """
+    Handles requests sent to AWS Lambda, converts the request into structured JSON, and processes it using specified tools.
+
+    This function is designed to act as an interface for an AWS Lambda to handle inputs from external triggers (e.g., AWS API Gateway).
+    It extracts the 'request' from the event object, validates it, and uses an LLM model to process the input.
+
+    Parameters:
+        event (dict): The event dictionary that AWS Lambda receives from the triggering service. It must contain:
+                      - 'request': a string representing the user input.
+        context (LambdaContext): The runtime information provided by AWS Lambda, which is not used in this function but required by the signature.
+
+    Returns:
+        dict: A dictionary with the keys 'statusCode' and 'body'. The 'body' is a JSON string that represents:
+              - The processed output when successful.
+              - An error message when any part of the processing fails.
+
+    The function checks for necessary environment variables, specifically:
+        - OPENAI_API_KEY: Required for API access.
+        - USER_NAME: Optional, defaults to 'unknown' if not set.
+
+    It expects the Lambda environment to be configured with necessary models and tool configurations.
+    Error responses follow typical HTTP status codes for ease of integration with HTTP-based APIs.
+
+    Examples of `event` structure:
+        {'request': 'Your request string here'}
+    """
+
+    MODEL, USER_NAME, CUSTOM_RULES = load_configuration()
+
+    try:
+        # Extract the request from the Lambda event
+        request = event.get('request')
+        if not request:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('No input provided. Please provide a message.')
+            }
+
+        # Check for the necessary API key in environment variables
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return {
+                'statusCode': 403,
+                'body': json.dumps('API Key not found. Please set your OPENAI_API_KEY environment variable.')
+            }
+
+        # Process the input to convert it to JSON
+        output = convert_to_json(request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps(output)
+        }
+
+    except ValueError as ve:
+        return {
+            'statusCode': 400,
+            'body': json.dumps(str(ve))
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f"An unexpected error occurred: {str(e)}")
+        }
 
 def main():
+
+    MODEL, USER_NAME, CUSTOM_RULES = load_configuration()
+
     try:
         # Attempt to retrieve the user input from command line arguments
         try:
@@ -265,7 +342,7 @@ def main():
             raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
 
         # Process the input to convert it to JSON
-        output = convert_to_json(request, USER_NAME, custom_rules, MODEL, tools_list)
+        output = convert_to_json(request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
 
         # If there's output, print it prettily
         if output:
