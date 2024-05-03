@@ -2,3 +2,4 @@ requests
 pyinstaller
 python-dotenv
 litellm
+pydantic
