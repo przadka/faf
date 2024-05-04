@@ -12,7 +12,7 @@ from docstring_parser import parse
 from litellm import completion
 
 # Local application/library specific imports
-from tools import follow_up_then, save_url, user_note, va_request
+from tools import follow_up_then, save_url, note_to_self, va_request
 
 def get_tool_function_info(tool_func):
     # Parse the docstring using docstring-parser
@@ -47,13 +47,12 @@ def collect_functions_info(*funcs):
 
 
 def tools_list():
-    return collect_functions_info(follow_up_then, user_note, save_url, va_request)
-
+    return collect_functions_info(follow_up_then, note_to_self, save_url, va_request)
 
 def call_tool_function(action):
     func_name = action['name']
     arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
-    tool_functions = {"follow_up_then": follow_up_then, "user_note": user_note, "save_url": save_url, "va_request": va_request}
+    tool_functions = {"follow_up_then": follow_up_then, "note_to_self": note_to_self, "save_url": save_url, "va_request": va_request}
     
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
@@ -105,8 +104,6 @@ def write_to_file(data: str) -> str:
 
     return f"Success: Data written to {filename} in directory {directory}."
 
-
-
 def convert_to_json(request: str, user_name: str, custom_rules: str, model: str, tools_list: List[Dict[str, Any]]) -> str:
     """
     Converts user requests into structured JSON using predefined LLM rules and functions.
@@ -121,26 +118,43 @@ def convert_to_json(request: str, user_name: str, custom_rules: str, model: str,
     Returns:
         str: A JSON string of the processed output including metadata.
     """
+
+    tools_names = [item['function']['name'] for item in tools_list if item['type'] == 'function']
+    tools_names_str = ', '.join(tools_names) 
+
     # Define the instructions for the LLM based on the given parameters
-    instructions = f"""
-    You are a personal assistant, helping the user to manage their schedule and tasks.
-    You use various tools to process follow ups, set reminders, collect URLs and contact the personal assistant.
-    
-    - User name is {user_name}. Avoid using it when responding directly to the user.
-    - NEVER add any new information or requests to the user's input.
-    - Correct only grammar, spelling, or punctuation mistakes.
-    - Use correct grammar and punctuation.
-    - If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
-    - If only a URL is provided, ALWAYS use the 'save_url' tool.
-    - Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
-    - Use the 'user_note' tool if unsure which tool to apply or if others fail.
-    {custom_rules}
-    """
+    system_prompt = f"""
+You are a personal assistant, helping the user to manage their schedule and tasks.
+You use various tools to process the user's requests and provide assistance.
+
+You can have to FOLLOW THESE RULES srictly when responding to the user's input:
+
+- User name is {user_name}. Avoid using it when responding directly to the user.
+- Always try to only grammar, spelling, or punctuation mistakes in user's input before passing it to the tools.
+- Never add any new information or requests to the user's input.
+- Never add any comments, observations, or opinions to the user's input when passing it to the tools.
+- If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
+- If only a URL is provided, ALWAYS use the 'save_url' tool.
+- Do not use follow_up_then if no date or time reference is provided.
+- Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
+- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message.
+{custom_rules}
+"""
+
+    user_prompt = f"""
+User provided the following input:
+
+===
+{request}
+===
+
+Use the following tools to process the user's request: {tools_names_str}.
+"""
 
     # Structure the messages as required by the completion function
     messages = [
-        {"role": "system", "content": instructions},
-        {"role": "user", "content": request}
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
     ]
 
     # Call the LLM completion function

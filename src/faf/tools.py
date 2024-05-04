@@ -4,9 +4,11 @@ import re
 def follow_up_then(prompt:str, date: str, message: str) -> str:
     """
     Send a follow-up reminder with the given date and message.
-    Use only if there is a specific date provided or
-    some time reference like "tomorrow" or "in 2 days".
+    Use ONLY IF there is a specific date provided or
+    a time reference, like "tomorrow" or "in 2 days".
+    
     Additional contraits for the date:
+    
       - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
       - Do not user "in a week", "in two weeks" or "in a month" replace them with "1week", 
       "2weeks" and "1month" respectively. 
@@ -42,7 +44,7 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     # return the JSON object as a string
     return json.dumps(tool_data)
 
-def user_note(prompt:str, message: str) -> str:
+def note_to_self(prompt:str, message: str) -> str:
     """
     Send a note to user with the given message.
     Useful for simple todos, reminders and short-term follow ups.
@@ -57,7 +59,7 @@ def user_note(prompt:str, message: str) -> str:
 
     tool_data = {
         "prompt": prompt,
-        "command": "user_note",
+        "command": "note_to_self",
         "payload": {
             "message": message
         }
