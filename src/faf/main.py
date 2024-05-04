@@ -1,14 +1,18 @@
-import sys
-import json
+# Standard library imports
 import inspect
+import json
 import os
-import dotenv
+import sys
 from datetime import datetime
-from typing import List, Dict, Any
-from docstring_parser import parse  
+from typing import Any, Dict, List
 
+# Related third party imports
+import dotenv
+from docstring_parser import parse
 from litellm import completion
-from tools import follow_up_then, user_note, save_url, va_request
+
+# Local application/library specific imports
+from tools import follow_up_then, save_url, user_note, va_request
 
 def get_tool_function_info(tool_func):
     # Parse the docstring using docstring-parser
