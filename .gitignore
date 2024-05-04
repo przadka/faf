@@ -41,3 +41,4 @@ deployment_package.zip
 event.json
 template.yml
 samconfig.toml
+lambda_deploy.sh
