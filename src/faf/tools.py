@@ -123,6 +123,4 @@ def va_request(prompt:str, title:str, request: str) -> str:
     }
 
     return json.dumps(tool_data)
-        
-    # return write_to_file(prompt, "va_request", {"title": title, "request": request})
 
