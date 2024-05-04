@@ -1,116 +1,50 @@
 import sys
 import json
+import inspect
 import os
 import dotenv
 from datetime import datetime
 from typing import List, Dict, Any
+from docstring_parser import parse  
 
 from litellm import completion
 from tools import follow_up_then, user_note, save_url, va_request
 
-
-def tools_list():
-    """
-        Generate a list of tools available for the LLM to use.
-    """
-
-    tools_list = [{
+def get_tool_function_info(tool_func):
+    # Parse the docstring using docstring-parser
+    doc = parse(inspect.getdoc(tool_func))
+    function_info = {
         "type": "function",
         "function": {
-            "name": "follow_up_then",
-            "description": """Send a follow-up reminder with the given date and message. Use only if there is a specific date provided or some time reference like "tomorrow" or "in 2 days".
-    Additional constraints for the date:
-
-    - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
-    - Do not use "inaweek", "in2weeks" or "in1month" replace them with "1week",  "2weeks" and "1month" respectively. 
-    - Date cannot have any spaces, dots or commas.""",
+            "name": tool_func.__name__,
+            "description": doc.short_description,
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "Full prompt provided by the user."
-                    },
-                    "date": {
-                        "type": "string",
-                        "description": "Date of the follow-up in the format like '1August', 'tomorrow3pm' or '2weeks'."
-                    },
-                    "message": {
-                        "type": "string",
-                        "description": "Message to send."
-                    }
-                },
-                "required": ["prompt", "date", "message"]
-            }
-        }
-    }, {
-        "type": "function",
-        "function": {
-            "name": "user_note",
-            "description": """Send a note to user with the given message. Useful for simple todos, reminders and short-term follow ups.""",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "Full prompt provided by the user."
-                    },
-                    "message": {
-                        "type": "string",
-                        "description": "Message to send."
-                    }
-                },
-                "required": ["prompt", "message"]
-            }
-        }
-    }, {
-        "type": "function",
-        "function": {
-            "name": "save_url",
-            "description": """Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.""",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "Full prompt provided by the user."
-                    },
-                    "url": {
-                        "type": "string",
-                        "description": "URL to append to the URL list."
-                    }
-                },
-                "required": ["prompt", "url"]
-            }
-        }
-    }, {
-        "type": "function",
-        "function": {
-            "name": "va_request",
-            "description": """Request for virtual assistant. Use only if the input explicitly includes the word "virtual assistant" or "VA".""",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "Full prompt provided by the user."
-                    },
-                    "title": {
-                        "type": "string",
-                        "description": "Title of the request, used as a Trello card title. Keep it short."
-                    },
-                    "request": {
-                        "type": "string",
-                        "description": "Request to send to the virtual assistant."
-                    }
-                },
-                "required": ["prompt", "title", "request"]
+                "properties": {},
+                "required": []
             }
         }
     }
-    ]
 
-    return tools_list
+    # Add parameters information
+    sig = inspect.signature(tool_func)
+    for name, param in sig.parameters.items():
+        function_info["function"]["parameters"]["properties"][name] = {
+            "type": "string", 
+            "description": next((p.description for p in doc.params if p.arg_name == name), "")
+        }
+        if param.default is inspect.Parameter.empty:
+            function_info["function"]["parameters"]["required"].append(name)
+
+    return function_info
+
+def collect_functions_info(*funcs):
+    return [get_tool_function_info(func) for func in funcs]
+
+
+def tools_list():
+    return collect_functions_info(follow_up_then, user_note, save_url, va_request)
+
 
 def call_tool_function(action):
     func_name = action['name']
@@ -188,7 +122,7 @@ def convert_to_json(request: str, user_name: str, custom_rules: str, model: str,
     You are a personal assistant, helping the user to manage their schedule and tasks.
     You use various tools to process follow ups, set reminders, collect URLs and contact the personal assistant.
     
-    - User name is {user_name}.
+    - User name is {user_name}. Avoid using it when responding directly to the user.
     - NEVER add any new information or requests to the user's input.
     - Correct only grammar, spelling, or punctuation mistakes.
     - Use correct grammar and punctuation.

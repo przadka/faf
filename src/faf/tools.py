@@ -15,7 +15,7 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     Args:
         prompt: Full prompt provided by the user.
         date: Date of the follow-up in the format like "1August", "tomorrow3pm" or "in2days".
-        message: Message to send.
+        message: Message to send. Do not include the date in the message.
 
     Returns:
         JSON string with all the data.
@@ -64,9 +64,6 @@ def user_note(prompt:str, message: str) -> str:
     }
 
     return json.dumps(tool_data)
-
-    # return write_to_file(prompt, "note_to_self", {"message": message})
-
 
 def save_url(prompt:str, url: str) -> str:
     """

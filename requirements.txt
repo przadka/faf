@@ -3,3 +3,4 @@ pyinstaller
 python-dotenv
 litellm
 pydantic
+docstring-parser
