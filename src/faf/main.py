@@ -148,7 +148,7 @@ User provided the following input:
 {request}
 ===
 
-Use the following tools to process the user's request: {tools_names_str}.
+Use the following tools to process the user's request: {tools_names_str}. You MUST use at least one tool to process the user's input.
 """
 
     # Structure the messages as required by the completion function
@@ -159,7 +159,7 @@ Use the following tools to process the user's request: {tools_names_str}.
 
     # Call the LLM completion function
     try:
-        response = completion(messages=messages, model=model, tools=tools_list)
+        response = completion(messages=messages, model=model, tools=tools_list, temperature=0.1)
         assistant_message = response.choices[0].message
     except Exception as e:
         return json.dumps({"error": "Failed to process input with LLM.", "details": str(e)})
