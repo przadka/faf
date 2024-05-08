@@ -98,7 +98,7 @@ def save_url(prompt:str, url: str) -> str:
 def va_request(prompt:str, title:str, request: str) -> str:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a virtual assistant or VA.
-    Use ONLY if the prompt includes the word "virtual assistant" or "VA".
+    Use ONLY if the prompt includes the words "virtual assistant", "v assistant" or "VA".
 
     Args:
         prompt: Full prompt provided by the user.
