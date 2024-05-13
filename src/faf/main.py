@@ -104,6 +104,81 @@ def write_to_file(data: str) -> str:
 
     return f"Success: Data written to {filename} in directory {directory}."
 
+def improve_user_input(input_text: str, user_name: str, custom_rules, model: str) -> str:
+    """
+    Improve the user input before passing it to the LLM.
+
+    Args:
+        input_text (str): The user input text to improve.
+
+    Returns:
+        str: The improved user input text.
+    """
+
+
+    
+    tools_list_str = ', '.join([item['function']['name'] for item in tools_list()])
+
+    system_prompt = "You are a helpful assistant tasked assiining the user's input to the relevant tool."
+
+    user_prompt = f"""
+
+## Instructions
+You are tasked with picking a relevant tool to process the user's input and add it to the response, as #tool_name.
+
+Here is a list of available tools: {tools_list_str}.
+
+## Rules
+- Focus only on assigning the user's input to the correct tool.
+- Never add any new information or requests to the user's input.
+- Never add any comments, observations, or opinions to the user's input when processing it.
+- If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
+- If only a URL is provided, ALWAYS use the 'save_url' tool.
+- Do not use follow_up_then if no date or time reference is provided.
+- Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
+- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message as it is.
+{custom_rules}
+
+## Examples
+Example 1:
+Original: "I need to schle a meeting on this Thrusday."
+Assistant output: "I need to schle a meeting on this Thrusday.. #follow_up_then"
+
+Example 2:
+Original: "Book a flught to New Yrk."
+Assistant output:  "Book a flught to New Yrk. #note_to_self"
+
+Example 3:
+Original: "Vir asst, book a place for the AI coference."
+Assistant output:  "Vir asst, book a place for the AI coference. #va_request"
+
+## Task
+Here is the user input you need to process:
+
+===
+{input_text}
+===
+
+Output only the user input text and the relevant tool name. Nothing else.
+"""
+    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
+    try:
+        response = completion(messages=messages, model= model)
+        assistant_message = response.choices[0].message
+    except Exception as e:
+        return json.dumps({"error": "Failed to process input with LLM.", "details": str(e)})
+    
+    improved_text = assistant_message.content
+
+    print("Text with tool: " + improved_text)
+    return improved_text
+
+
 def convert_to_json(request: str, user_name: str, custom_rules: str, model: str, tools_list: List[Dict[str, Any]]) -> str:
     """
     Converts user requests into structured JSON using predefined LLM rules and functions.
@@ -132,11 +207,7 @@ You can have to FOLLOW THESE RULES srictly when responding to the user's input:
 - User name is {user_name}. Avoid using it when responding directly to the user.
 - Always try to only grammar, spelling, or punctuation mistakes in user's input before passing it to the tools.
 - Never add any new information or requests to the user's input.
-- Never add any comments, observations, or opinions to the user's input when passing it to the tools.
-- If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
-- If only a URL is provided, ALWAYS use the 'save_url' tool.
-- Do not use follow_up_then if no date or time reference is provided.
-- Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
+- Never add any comments, observations, or opinions to the user's input when processing it.
 - If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message.
 {custom_rules}
 """
@@ -255,7 +326,8 @@ def lambda_handler(event, context):
             }
 
         # Process the input to convert it to JSON
-        output = convert_to_json(request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
+        improved_request = improve_user_input(request, USER_NAME, CUSTOM_RULES, MODEL)
+        output = convert_to_json(improved_request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
 
         return {
             'statusCode': 200,
@@ -276,6 +348,8 @@ def lambda_handler(event, context):
 def main():
 
     MODEL, USER_NAME, CUSTOM_RULES = load_configuration()
+    
+    dotenv.load_dotenv()
 
     try:
         # Attempt to retrieve the user input from command line arguments
@@ -288,17 +362,18 @@ def main():
         if not request:
             raise ValueError("No input provided. Please provide a message.")
 
-        # Check for the necessary API key in environment variables
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            raise ValueError("API Key not found. Please set your OPENAI_API_KEY environment variable.")
-
         # Process the input to convert it to JSON
-        output = convert_to_json(request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
+
+        # escape single and double quotes
+        request = request.replace("'", "\\'").replace('"', '\\"')
+        improved_request = improve_user_input(request, USER_NAME, CUSTOM_RULES, MODEL)
+
+        output = convert_to_json(improved_request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
 
         # If there's output, print it prettily
         if output:
-            write_to_file(json.dumps(output))
+            pass
+            # write_to_file(json.dumps(output))
 
     except ValueError as ve:
         print(str(ve))
