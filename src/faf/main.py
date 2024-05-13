@@ -219,7 +219,9 @@ User provided the following input:
 {request}
 ===
 
-Use the following tools to process the user's request: {tools_names_str}. You MUST use at least one tool to process the user's input.
+Use the following tools to process the user's request: {tools_names_str}.
+
+You MUST use at least one tool to process the user's input. Do not include hashtag in your input to the tools.
 """
 
     # Structure the messages as required by the completion function
