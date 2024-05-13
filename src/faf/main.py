@@ -372,8 +372,7 @@ def main():
 
         # If there's output, print it prettily
         if output:
-            pass
-            # write_to_file(json.dumps(output))
+            write_to_file(json.dumps(output))
 
     except ValueError as ve:
         print(str(ve))
