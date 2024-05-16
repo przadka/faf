@@ -32,6 +32,10 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     date = date.replace(".", "")
     date = date.replace(",", "")
 
+    # remove "in" if used as "inXday" or "inXweek" or "inXmonth", match the number and the unit
+    date = re.sub(r'in(\d+)(day|week|month)', r'\1\2', date)
+    
+    print(date)
     tool_data = {
         "prompt": prompt,
         "command": "follow_up_then",
