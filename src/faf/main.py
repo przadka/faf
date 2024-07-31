@@ -133,6 +133,7 @@ Here is a list of available tools: {tools_list_str}.
 - Focus only on assigning the user's input to the correct tool.
 - Never add any new information or requests to the user's input.
 - Never add any comments, observations, or opinions to the user's input when processing it.
+- Never modify the user's input in any way unless you are making spelling, grammar, or punctuation corrections.
 - If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
 - If only a URL is provided, ALWAYS use the 'save_url' tool.
 - Do not use follow_up_then if no date or time reference is provided.
@@ -160,7 +161,7 @@ Here is the user input you need to process:
 {input_text}
 ===
 
-Output only the user input text and the relevant tool name. Nothing else.
+Output full user input text and the relevant tool name. Nothing else.
 """
     
     messages = [
