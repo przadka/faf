@@ -1,6 +1,6 @@
 requests
 pyinstaller
 python-dotenv
-litellm
+litellm==1.37.9
 pydantic
 docstring-parser

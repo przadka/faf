@@ -15,7 +15,7 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
       - Date cannot have any spaces, dots or commas. 
 
     Args:
-        prompt: Full prompt provided by the user.
+        prompt: Full input provided by the user, exactly as it was typed.
         date: Date of the follow-up in the format like "1August", "tomorrow3pm" or "in2days".
         message: Message to send. Do not include the date in the message.
 
@@ -35,7 +35,6 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     # remove "in" if used as "inXday" or "inXweek" or "inXmonth", match the number and the unit
     date = re.sub(r'in(\d+)(day|week|month)', r'\1\2', date)
     
-    print(date)
     tool_data = {
         "prompt": prompt,
         "command": "follow_up_then",
@@ -54,7 +53,7 @@ def note_to_self(prompt:str, message: str) -> str:
     Useful for simple todos, reminders and short-term follow ups.
 
     Args:
-        prompt: Full prompt provided by the user.
+        prompt: Full input provided by the user, exactly as it was typed.
         message: Message to send. Should be based on the prompt, without any additional information.
 
     Returns:
@@ -76,7 +75,7 @@ def save_url(prompt:str, url: str) -> str:
     Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
     Args:
-        prompt: Full prompt provided by the user.
+        prompt: Full input provided by the user, exactly as it was typed.
         user_url: URL to append to the URL list.
 
     Returns:
@@ -105,7 +104,7 @@ def va_request(prompt:str, title:str, request: str) -> str:
     Use ONLY if the prompt includes the words "virtual assistant", "v assistant" or "VA".
 
     Args:
-        prompt: Full prompt provided by the user.
+        prompt: Full input provided by the user, exactly as it was typed.
         title: Title of the request, used as a Trello card title. Keep it short.
         request: Request to send.
 

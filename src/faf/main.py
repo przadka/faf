@@ -76,6 +76,7 @@ def write_to_file(data: str) -> str:
     Raises:
         ValueError: If the data is not a valid JSON string.
     """
+    print("Writing to file: " + data)
     try:
         # Attempt to parse the JSON string to a dictionary
         data_dict = json.loads(data)
