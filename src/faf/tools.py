@@ -111,10 +111,6 @@ def va_request(prompt:str, title:str, request: str) -> str:
     Returns:
         JSON string with all the data.
     """
-
-    # check if the prompt includes the word "virtual assistant" or "VA", as a separate word
-    if "virtual assistant" not in prompt.lower() and not re.search(r'\bva\b', prompt.lower()):
-        return "Error: The input does not explicitly ask for a virtual assistant or VA."
     
     tool_data = {
         "prompt": prompt,
