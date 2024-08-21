@@ -5,6 +5,7 @@ import os
 import sys
 from datetime import datetime
 from typing import Any, Dict, List
+from icecream import ic
 
 # Related third party imports
 import dotenv
@@ -374,8 +375,8 @@ def main():
 
         output = convert_to_json(improved_request, USER_NAME, CUSTOM_RULES, MODEL, tools_list())
 
-        # If there's output, print it prettily
         if output:
+            ic(output)
             write_to_file(json.dumps(output))
 
     except ValueError as ve:
