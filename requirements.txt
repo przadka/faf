@@ -4,3 +4,4 @@ python-dotenv
 litellm==1.37.9
 pydantic
 docstring-parser
+icecream
