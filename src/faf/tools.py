@@ -7,12 +7,13 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
     Use ONLY IF there is a specific date provided or
     a time reference, like "tomorrow" or "in 2 days".
     
-    Additional contraits for the date:
+    Constraints on the date:
     
-      - Do not use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
-      - Do not user "in a week", "in two weeks" or "in a month" replace them with "1week", 
+      - Never use "this" in the date like "thisMonday" or "thisTuesday" as FUT does not support them.
+      - Never use "in a week", "in two weeks" or "in a month" replace them with "1week", 
       "2weeks" and "1month" respectively. 
-      - Date cannot have any spaces, dots or commas. 
+      - Date cannot have any spaces, dots, semicolons or commas. 
+      - Never use colons in hours, use "3pm" instead of "3:00pm".
 
     Args:
         prompt: Full input provided by the user, exactly as it was typed.
