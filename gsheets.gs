@@ -1,5 +1,6 @@
-function processNewRow(e) {
+function processNewRows() {
   var spreadsheet = e.source;
+  
   var sheet = spreadsheet.getSheetByName("FAFLog");
   var lastRow = sheet.getLastRow();
   
@@ -14,7 +15,7 @@ function processNewRow(e) {
       try {
         command = JSON.parse(cellValue);
       } catch (error) {
-        return;
+        continue; // Continue processing next rows even if one row failed
       }
       
       // process the command
@@ -27,6 +28,12 @@ function processNewRow(e) {
           break;
         case "save_url":
           saveUrl(command.payload);
+          break;
+        case "va_request":
+          requestVATrello(command.payload);
+          break;
+        case "journaling_topic":
+          saveJournalingTopic(command.payload);
           break;
         default:
       }
@@ -46,7 +53,7 @@ function sendFollowUpEmail(payload) {
   MailApp.sendEmail({
     to: email,
     subject: message,
-    body: "Send from FAF"
+    body: "Sent from FAF"
   });
 }
 
@@ -59,13 +66,13 @@ function sendSelfNoteEmail(payload) {
   MailApp.sendEmail({
     to: email,
     subject: "[Self Note] " + message,
-    body: "Send from FAF"
-  });
+    body: "Sent from FAF"
+  });  
 }
 
 function saveUrl(payload) {
-    var url = payload.url;
-    
+  var url = payload.url;
+  
     // replace with the ID of your separate Google Sheets file
     var sheetId = "your-google-sheets-id";
     
@@ -73,3 +80,15 @@ function saveUrl(payload) {
     sheet.appendRow([url]);
   }
   
+function saveJournalingTopic(payload) {
+  var topic = payload.topic;
+  const timestamp = new Date().toISOString();
+
+    // replace with the ID of your separate Google Sheets file
+    var sheetId = "your-google-sheets-id";
+  
+  var sheet = SpreadsheetApp.openById(sheetId).getActiveSheet();
+  sheet.appendRow([timestamp, topic]);
+
+}
+

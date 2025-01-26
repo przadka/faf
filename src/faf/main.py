@@ -13,7 +13,7 @@ from docstring_parser import parse
 from litellm import completion
 
 # Local application/library specific imports
-from tools import follow_up_then, save_url, note_to_self, va_request
+from tools import follow_up_then, save_url, note_to_self, va_request, journaling_topic
 
 def get_tool_function_info(tool_func):
     # Parse the docstring using docstring-parser
@@ -48,12 +48,12 @@ def collect_functions_info(*funcs):
 
 
 def tools_list():
-    return collect_functions_info(follow_up_then, note_to_self, save_url, va_request)
+    return collect_functions_info(follow_up_then, note_to_self, save_url, va_request, journaling_topic)
 
 def call_tool_function(action):
     func_name = action['name']
     arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
-    tool_functions = {"follow_up_then": follow_up_then, "note_to_self": note_to_self, "save_url": save_url, "va_request": va_request}
+    tool_functions = {"follow_up_then": follow_up_then, "note_to_self": note_to_self, "save_url": save_url, "va_request": va_request, "journaling_topic": journaling_topic}
     
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
@@ -139,6 +139,8 @@ Here is a list of available tools: {tools_list_str}.
 - If only a URL is provided, ALWAYS use the 'save_url' tool.
 - Do not use follow_up_then if no date or time reference is provided.
 - Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
+- Use the 'journaling_topic' tool ONLY if the user explicitly mentions journal or journaling.
+- Journaling topics should be short and concise, with any relevant details included.
 - If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message as it is.
 {custom_rules}
 
@@ -154,6 +156,10 @@ Assistant output:  "Book a flught to New Yrk. #note_to_self"
 Example 3:
 Original: "Vir asst, book a place for the AI coference."
 Assistant output:  "Vir asst, book a place for the AI coference. #va_request"
+
+Example 4:
+Original: "I want to journal about my trip to the mountains."
+Assistant output:  "I want to journal about my trip to the mountains. #journaling_topic"
 
 ## Task
 Here is the user input you need to process:

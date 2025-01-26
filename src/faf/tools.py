@@ -99,7 +99,29 @@ def save_url(prompt:str, url: str) -> str:
     }
 
     return json.dumps(tool_data)
+
+def journaling_topic(prompt:str, topic: str) -> str:
+    """
+    Save a journaling topic to the idea list, to write about later.
+
+    Args:
+        prompt: Full input provided by the user, exactly as it was typed.
+        topic: Topic to save, with any relevant details.
+
+    Returns:
+        JSON string with all the data.
+    """
     
+    tool_data = {
+        "prompt": prompt,
+            "command": "journaling_topic",
+            "payload": {
+            "topic": topic
+        }
+    }
+
+    return json.dumps(tool_data)
+
 def va_request(prompt:str, title:str, request: str) -> str:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a virtual assistant or VA.
