@@ -17,6 +17,7 @@ dist/
 *.gz
 *.sqlite
 *.spec
+!faf.spec
 
 # Test files
 .tox/

@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  FAF:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./deployment_package.zip
+      Handler: main.lambda_handler
+      Runtime: python3.10
+      Timeout: 30
+      Environment:
+        Variables:
+          OPENAI_API_KEY: "<your-openai-api-key>"
+          FAF_USER_NAME: "<your-name>"
+          FAF_MODEL: "gpt-4-1106-preview"
+          FAF_CUSTOM_RULES_FILE: "./faf_custom_rules.md" 
