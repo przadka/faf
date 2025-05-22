@@ -1,7 +1,4 @@
-import json
-import pytest
-from unittest import mock
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from faf.mcp_server import FafMcpServer
 
 
@@ -12,9 +9,9 @@ class TestFafMcpServer:
     def test_init(self, mock_load_config):
         """Test that FafMcpServer initializes correctly."""
         mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
-        
+
         server = FafMcpServer()
-        
+
         assert server.model == "gpt-4o"
         assert server.user_name == "TestUser"
         assert server.custom_rules == "Custom rules"
@@ -26,10 +23,10 @@ class TestFafMcpServer:
         """Test that run_stdio calls FastMCP with correct transport."""
         mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
         mock_mcp.run = Mock()
-        
+
         server = FafMcpServer()
         server.run_stdio()
-        
+
         mock_mcp.run.assert_called_once_with(transport="stdio")
 
     @patch('faf.mcp_server.load_configuration')
@@ -37,16 +34,13 @@ class TestFafMcpServer:
     def test_run_http(self, mock_mcp, mock_load_config):
         """Test that run_http calls FastMCP with correct parameters."""
         mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
-        
+
         server = FafMcpServer()
-        server.run_http("localhost", 8000, "/custom", "debug")
-        
+        server.run_http("/custom")
+
         mock_mcp.run.assert_called_once_with(
             transport="streamable-http",
-            host="localhost",
-            port=8000,
-            path="/custom",
-            log_level="debug"
+            mount_path="/custom"
         )
 
     @patch('faf.mcp_server.load_configuration')
@@ -54,16 +48,13 @@ class TestFafMcpServer:
     def test_run_http_default_args(self, mock_mcp, mock_load_config):
         """Test that run_http uses default parameters when not specified."""
         mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
-        
+
         server = FafMcpServer()
         server.run_http()
-        
+
         mock_mcp.run.assert_called_once_with(
             transport="streamable-http",
-            host="127.0.0.1",
-            port=5000,
-            path="/mcp",
-            log_level="info"
+            mount_path="/mcp"
         )
 
 
@@ -81,19 +72,18 @@ class TestMcpServerIntegration:
         """Test that the server shows help correctly."""
         import subprocess
         import sys
-        
+
         # Run the server with --help flag
         result = subprocess.run([
             sys.executable, '-m', 'faf.mcp_server', '--help'
         ], capture_output=True, text=True, cwd='/home/michal/dev/faf/src')
-        
+
         assert result.returncode == 0
         assert 'FAF MCP Server' in result.stdout
         assert '--transport' in result.stdout
         assert 'stdio' in result.stdout
         assert 'http' in result.stdout
-        assert '--path' in result.stdout
-        assert '--log-level' in result.stdout
+        assert '--mount-path' in result.stdout
 
 
 class TestMcpServerCLI:
@@ -101,48 +91,46 @@ class TestMcpServerCLI:
 
     def test_parse_args_new_arguments(self):
         """Test that new CLI arguments are parsed correctly."""
-        import argparse
         from faf.mcp_server import main
-        
-        # Test parsing path and log-level arguments
-        with patch('sys.argv', ['mcp_server.py', '--transport', 'http', '--path', '/custom', '--log-level', 'debug']):
+
+        # Test parsing mount-path argument
+        with patch('sys.argv', ['mcp_server.py', '--transport', 'http', '--mount-path', '/custom']):
             with patch('faf.mcp_server.os.getenv', return_value='test-key'):
                 with patch('faf.mcp_server.load_configuration') as mock_load_config:
                     mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
                     with patch('faf.mcp_server.FafMcpServer') as mock_server_class:
                         mock_server = Mock()
                         mock_server_class.return_value = mock_server
-                        
+
                         try:
                             main()
                         except SystemExit:
                             pass  # Expected for test
-                        
+
                         # Verify the server was called with correct arguments
                         mock_server.run_http.assert_called_once_with(
-                            host='127.0.0.1',
-                            port=5000,
-                            path='/custom',
-                            log_level='debug'
+                            mount_path='/custom'
                         )
 
     def test_missing_openai_key_exits(self):
         """Test that missing OPENAI_API_KEY causes sys.exit(1)."""
         from faf.mcp_server import main
-        
+
         with patch('sys.argv', ['mcp_server.py']):
             with patch('faf.mcp_server.os.getenv', return_value=None):
                 with patch('sys.exit') as mock_exit:
                     with patch('faf.mcp_server.logger') as mock_logger:
                         main()
-                        mock_logger.error.assert_called_with("OPENAI_API_KEY environment variable not set")
+                        mock_logger.error.assert_called_with(
+                            "OPENAI_API_KEY environment variable not set"
+                        )
                         # Just check that sys.exit(1) was called, don't worry about exact count
                         mock_exit.assert_any_call(1)
 
     def test_keyboard_interrupt_handling(self):
         """Test graceful handling of keyboard interrupt."""
         from faf.mcp_server import main
-        
+
         with patch('sys.argv', ['mcp_server.py']):
             with patch('faf.mcp_server.os.getenv', return_value='test-key'):
                 with patch('faf.mcp_server.load_configuration') as mock_load_config:
@@ -151,7 +139,7 @@ class TestMcpServerCLI:
                         mock_server = Mock()
                         mock_server.run_stdio.side_effect = KeyboardInterrupt()
                         mock_server_class.return_value = mock_server
-                        
+
                         with patch('faf.mcp_server.logger') as mock_logger:
                             main()
                             mock_logger.info.assert_called_with("Server stopped by user")
@@ -159,7 +147,7 @@ class TestMcpServerCLI:
     def test_exception_handling(self):
         """Test proper exception handling with sys.exit(1)."""
         from faf.mcp_server import main
-        
+
         with patch('sys.argv', ['mcp_server.py']):
             with patch('faf.mcp_server.os.getenv', return_value='test-key'):
                 with patch('faf.mcp_server.load_configuration') as mock_load_config:
@@ -168,7 +156,7 @@ class TestMcpServerCLI:
                         mock_server = Mock()
                         mock_server.run_stdio.side_effect = Exception("Test error")
                         mock_server_class.return_value = mock_server
-                        
+
                         with patch('sys.exit') as mock_exit:
                             with patch('faf.mcp_server.logger') as mock_logger:
                                 main()
@@ -184,25 +172,22 @@ class TestMcpServerParameterValidation:
     def test_run_http_with_all_parameters(self, mock_mcp, mock_load_config):
         """Test run_http with all possible parameter combinations."""
         mock_load_config.return_value = ("gpt-4o", "TestUser", "Custom rules")
-        
+
         server = FafMcpServer()
-        
-        # Test with various parameter combinations
+
+        # Test with various mount path combinations
         test_cases = [
-            ("localhost", 8080, "/api", "debug"),
-            ("0.0.0.0", 3000, "/mcp-server", "error"),
-            ("127.0.0.1", 5000, "/", "warning"),
+            "/api",
+            "/mcp-server",
+            "/",
         ]
-        
-        for host, port, path, log_level in test_cases:
+
+        for mount_path in test_cases:
             mock_mcp.reset_mock()
-            server.run_http(host, port, path, log_level)
+            server.run_http(mount_path)
             mock_mcp.run.assert_called_once_with(
                 transport="streamable-http",
-                host=host,
-                port=port,
-                path=path,
-                log_level=log_level
+                mount_path=mount_path
             )
 
     @patch('faf.mcp_server.load_configuration')
@@ -213,7 +198,7 @@ class TestMcpServerParameterValidation:
             ("gpt-3.5-turbo", None, None),
             ("claude-3", "DifferentUser", ""),
         ]
-        
+
         for model, user_name, custom_rules in test_configs:
             mock_load_config.return_value = (model, user_name, custom_rules)
             server = FafMcpServer()
