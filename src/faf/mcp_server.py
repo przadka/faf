@@ -14,6 +14,8 @@ import sys
 
 # Import MCP SDK
 from mcp.server.fastmcp import FastMCP
+from fastapi import FastAPI
+import uvicorn
 
 # Local application imports
 from faf.main import load_configuration
@@ -62,11 +64,26 @@ class FafMcpServer:
             port: Port to listen on
         """
         logger.info(f"Starting MCP Server on {host}:{port}")
-        self.mcp_server.run(
-            "streamable-http",  # Use HTTP transport
-            host=host,
-            port=port,
-        )
+        # Create a new FastAPI app
+        app = FastAPI(title=SERVER_NAME, version=SERVER_VERSION, description=SERVER_DESCRIPTION)
+
+        # Mount the FastMCP app to a specific path
+        from fastapi.middleware.wsgi import WSGIMiddleware
+        from starlette.routing import Mount
+
+        # Get the streamable HTTP app from FastMCP and add it to the main app
+        mcp_app = self.mcp_server.streamable_http_app()
+        
+        # Add some additional routes for status/health checks if needed
+        @app.get("/health")
+        async def health_check():
+            return {"status": "ok"}
+        
+        # Include the MCP app
+        app.routes.append(Mount("/mcp", app=mcp_app))
+        
+        # Start the Uvicorn server with our app
+        uvicorn.run(app, host=host, port=port)
 
 def main():
     """Main entry point for the MCP server."""
