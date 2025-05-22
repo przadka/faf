@@ -112,6 +112,32 @@ FAF serves as a link in a chain of automation tasks. After processing your input
 2. Next, use a tool like Zapier or Make to create a new row in a Google Sheet every time a new file is uploaded to your Dropbox 'faf' folder. The integration will add a new row to the Google Sheet, with the details from the file included in the new row.
 3. With each new row added to the Google Sheet, further process this input with a Google Apps Script, invoking relevant actions based on the nature of the input. An example Google Sheet integration code is available in the `integrations/gsheets.gs` file in this repository.
 
+## Deployment
+
+FAF can be run locally as a standard Python CLI tool, or optionally deployed to AWS Lambda for serverless operation. Most users will simply run FAF locally; Lambda deployment is provided for advanced or cloud-based use cases.
+
+### Running Locally
+
+After installing dependencies and setting environment variables as described above, you can run FAF directly:
+
+```
+python src/faf/main.py "Your text input here"
+```
+
+### Deploying to AWS Lambda (Optional)
+
+To deploy FAF to AWS Lambda using AWS SAM, use the provided deployment script template:
+
+```
+cp scripts/lambda_deploy.example.sh scripts/lambda_deploy.sh
+# Edit scripts/lambda_deploy.sh and fill in your own values
+./scripts/lambda_deploy.sh
+```
+
+By default, the script uses a placeholder for the custom rules file path. Edit the script to set your actual path. For convenience, `scripts/lambda_deploy.sh` is gitignored, so your personal deployment script will not be committed.
+
+The script will package the code and dependencies, then run `sam build` and `sam deploy`.
+
 ## Contributing
 
 Contributions are welcomed!
