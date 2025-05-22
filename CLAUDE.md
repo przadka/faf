@@ -57,6 +57,32 @@ python src/faf/mcp_server.py
 python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
 ```
 
+### MCP Client Configuration
+
+For Claude Desktop, add to configuration file:
+```json
+{
+  "mcpServers": {
+    "faf": {
+      "command": "python",
+      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
+      "env": {
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder",
+        "FAF_USER_NAME": "YourName",
+        "FAF_CUSTOM_RULES_FILE": "/absolute/path/to/custom_rules.md"
+      }
+    }
+  }
+}
+```
+
+**Important MCP Setup Notes:**
+- Always use absolute paths in MCP client configurations
+- Ensure `FAF_JSON_OUTPUT_PATH` directory exists and is writable
+- Test MCP server standalone before configuring with clients
+- Restart MCP clients after configuration changes
+
 ### Packaging
 
 To create a single executable file:

@@ -164,21 +164,72 @@ python src/faf/mcp_server.py
 python src/faf/mcp_server.py --transport stdio
 ```
 
-**Claude Desktop Configuration Example:**
+#### MCP Client Configuration
 
-Add this to your Claude Desktop configuration file:
+**Claude Desktop Configuration:**
+
+Add this to your Claude Desktop configuration file (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS or `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
 
 ```json
 {
   "mcpServers": {
     "faf": {
       "command": "python",
-      "args": ["/path/to/faf/src/faf/mcp_server.py"],
+      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
       "env": {
         "OPENAI_API_KEY": "your_openai_api_key",
-        "FAF_JSON_OUTPUT_PATH": "/path/to/your/output/folder"
+        "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder",
+        "FAF_USER_NAME": "YourName",
+        "FAF_CUSTOM_RULES_FILE": "/absolute/path/to/custom_rules.md"
       }
     }
+  }
+}
+```
+
+**Alternative configurations:**
+
+For packaged installation:
+```json
+{
+  "mcpServers": {
+    "faf": {
+      "command": "faf-mcp",
+      "env": {
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder"
+      }
+    }
+  }
+}
+```
+
+For HTTP transport:
+```json
+{
+  "mcpServers": {
+    "faf": {
+      "command": "python",
+      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py", "--transport", "http", "--host", "127.0.0.1", "--port", "5000"],
+      "env": {
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder"
+      }
+    }
+  }
+}
+```
+
+**VS Code Extensions and other MCP clients:**
+
+For stdio transport (most common):
+```json
+{
+  "command": "python",
+  "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
+  "env": {
+    "OPENAI_API_KEY": "your_openai_api_key",
+    "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder"
   }
 }
 ```
@@ -210,6 +261,63 @@ curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{
 # Execute a tool
 curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"tools/execute","params":{"name":"note_to_self","arguments":{"prompt":"Test note","message":"Remember to test the MCP server"}},"id":2}'
 ```
+
+#### Troubleshooting MCP Setup
+
+**Common Issues and Solutions:**
+
+1. **Server fails to start:**
+   ```
+   Error: Could not import FastMCP
+   ```
+   **Solution:** Install FastMCP: `pip install fastmcp`
+
+2. **Environment variables not found:**
+   ```
+   Error: OPENAI_API_KEY not set
+   ```
+   **Solution:** Ensure all required environment variables are set in the MCP client configuration, not just in your shell.
+
+3. **Claude Desktop doesn't recognize the server:**
+   - Verify the configuration file path is correct
+   - Use absolute paths for `command` and file paths in `env`
+   - Restart Claude Desktop after configuration changes
+   - Check Claude Desktop logs for specific error messages
+
+4. **Permission denied errors:**
+   ```
+   Error: Permission denied: python
+   ```
+   **Solutions:** 
+   - Use full path to python: `/usr/bin/python3` or `/path/to/venv/bin/python`
+   - Ensure the FAF directory and files are readable
+   - On macOS, grant Terminal/Claude Desktop appropriate permissions
+
+5. **Tools not appearing in client:**
+   - Verify the server starts without errors: `python src/faf/mcp_server.py --transport stdio`
+   - Check that all environment variables are properly set
+   - Ensure `FAF_JSON_OUTPUT_PATH` directory exists and is writable
+
+6. **Module not found errors:**
+   ```
+   ModuleNotFoundError: No module named 'faf'
+   ```
+   **Solution:** Run from the correct directory or use absolute paths, or install FAF in development mode: `pip install -e .`
+
+**Debugging Tips:**
+
+- Test the MCP server standalone before configuring with clients
+- Use `--transport stdio` to test server startup and tool availability
+- Check that JSON output files are being created in `FAF_JSON_OUTPUT_PATH`
+- Verify OpenAI API key works by testing FAF CLI directly first
+
+**Environment Variable Requirements:**
+
+All MCP client configurations must include these environment variables:
+- `OPENAI_API_KEY` (required): Your OpenAI API key
+- `FAF_JSON_OUTPUT_PATH` (required): Directory for JSON output files
+- `FAF_USER_NAME` (optional): User name for personalization
+- `FAF_CUSTOM_RULES_FILE` (optional): Path to custom rules file
 
 ## Contributing
 
