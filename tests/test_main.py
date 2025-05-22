@@ -3,7 +3,7 @@ import json
 import tempfile
 import pytest
 from unittest import mock
-from src.faf import main, tools
+from faf import main, tools
 
 def test_get_tool_function_info():
     """Test that get_tool_function_info extracts correct metadata from a tool function."""
@@ -76,7 +76,7 @@ def test_load_configuration(monkeypatch):
 
 def test_improve_user_input_mocked():
     """Test improve_user_input returns the expected improved text using a mocked LLM response."""
-    with mock.patch("src.faf.main.completion") as mock_completion:
+    with mock.patch("faf.main.completion") as mock_completion:
         class MockMessage:
             content = "Buy milk. #note_to_self"
         mock_completion.return_value = mock.Mock(choices=[mock.Mock(message=MockMessage())])
@@ -86,8 +86,8 @@ def test_improve_user_input_mocked():
 def test_convert_to_json_mocked():
     """Test convert_to_json returns the expected JSON output using mocked LLM response 
     and tool call."""
-    with mock.patch("src.faf.main.completion") as mock_completion, \
-         mock.patch("src.faf.main.call_tool_function") as mock_call_tool_function:
+    with mock.patch("faf.main.completion") as mock_completion, \
+         mock.patch("faf.main.call_tool_function") as mock_call_tool_function:
         # Simplify mocking with direct Mock objects
         mock_function = mock.Mock()
         mock_function.name = "note_to_self"

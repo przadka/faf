@@ -13,11 +13,10 @@ import os
 import sys
 
 # Import MCP SDK
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
 # Local application imports
-from src.faf.main import load_configuration
-# Import the MCP tools to ensure they are registered via decorators
+from faf.main import load_configuration
 
 # Configure logging
 logging.basicConfig(
@@ -33,6 +32,9 @@ SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF) command-line tool"
 
 # Create the FastMCP instance at the module level for use by decorators
 mcp = FastMCP(SERVER_NAME)
+
+# Import the MCP tools to ensure they are registered via decorators
+import faf.mcp_tools  # noqa: F401, E402, registers all @mcp.tool decorators
 
 class FafMcpServer:
     """

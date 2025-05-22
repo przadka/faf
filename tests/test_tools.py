@@ -1,6 +1,6 @@
 import json
 import pytest
-from src.faf import tools
+from faf import tools
 
 def test_follow_up_then():
     """Test that follow_up_then returns the correct JSON structure for a follow-up reminder."""

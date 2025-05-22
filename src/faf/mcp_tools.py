@@ -7,7 +7,7 @@ This module wraps the FAF tools with MCP decorators to make them available via t
 import json
 
 # Import the original synchronous FAF tool functions
-from src.faf.tools import (
+from faf.tools import (
     follow_up_then as follow_up_then_sync,
     note_to_self as note_to_self_sync,
     save_url as save_url_sync,
@@ -16,7 +16,7 @@ from src.faf.tools import (
 )
 
 # Import the shared FastMCP instance
-from src.faf.mcp_server import mcp
+from faf.mcp_server import mcp
 
 # Remove custom decorator, MCPToolResult, and manual thread-pool offloading
 
