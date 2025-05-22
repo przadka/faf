@@ -37,6 +37,7 @@ logger = logging.getLogger("faf_mcp_server")
 # MCP server configuration
 SERVER_NAME = "faf-mcp-server"
 SERVER_VERSION = "0.1.0"
+SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF) command-line tool"
 
 class FafMcpServer:
     """
@@ -56,9 +57,10 @@ class FafMcpServer:
 
         # Create MCP server
         self.mcp_server = FastMCP(
+            SERVER_NAME,  # Positional name argument
             app=self.app,
-            server_name=SERVER_NAME,
-            server_version=SERVER_VERSION
+            version=SERVER_VERSION,
+            description=SERVER_DESCRIPTION
         )
 
         # Register tools using the decorator-based approach

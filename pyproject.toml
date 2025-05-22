@@ -16,7 +16,7 @@ dependencies = [
     "docstring-parser",
     "litellm",
     "icecream",
-    "fastmcp",
+    "fastmcp[cli]",  # Include CLI tools for linting and testing
     "uvicorn",
     "anyio>=4.0.0"
 ]
