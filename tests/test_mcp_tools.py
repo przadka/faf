@@ -80,7 +80,8 @@ class TestMcpTools:
         
         mock_sync_func.return_value = "Error: Invalid URL"
         
-        with pytest.raises(ValueError, match="Error: Invalid URL"):
+        # Test that validation catches invalid URL before sync function is called
+        with pytest.raises(ValueError, match="URL must start with"):
             await save_url("not a url", "not a url")
 
     @pytest.mark.asyncio
@@ -181,3 +182,203 @@ class TestMcpTools:
         
         for tool in tools:
             assert inspect.iscoroutinefunction(tool), f"Tool {tool.__name__} is not an async function"
+
+
+class TestMcpToolsValidation:
+    """Test cases for MCP tools input validation."""
+
+    @pytest.mark.asyncio
+    async def test_follow_up_then_validation(self):
+        """Test follow_up_then input validation."""
+        from faf.mcp_tools import follow_up_then
+
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty"):
+            await follow_up_then("", "tomorrow", "Call John")
+
+        # Test empty date
+        with pytest.raises(ValueError, match="Date cannot be empty"):
+            await follow_up_then("Call John tomorrow", "", "Call John")
+
+        # Test empty message
+        with pytest.raises(ValueError, match="Message cannot be empty"):
+            await follow_up_then("Call John tomorrow", "tomorrow", "")
+
+        # Test invalid date with spaces
+        with pytest.raises(ValueError, match="Date cannot contain ' ' characters"):
+            await follow_up_then("Call John tomorrow", "tomorrow 3pm", "Call John")
+
+        # Test invalid date with "this"
+        with pytest.raises(ValueError, match="Date cannot start with 'this'"):
+            await follow_up_then("Call John this Monday", "thisMonday", "Call John")
+
+        # Test invalid date with colons
+        with pytest.raises(ValueError, match="Time should not contain colons"):
+            await follow_up_then("Call John at 3:00pm", "tomorrow3:00pm", "Call John")
+
+    @pytest.mark.asyncio
+    async def test_note_to_self_validation(self):
+        """Test note_to_self input validation."""
+        from faf.mcp_tools import note_to_self
+
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty"):
+            await note_to_self("", "Buy milk")
+
+        # Test empty message
+        with pytest.raises(ValueError, match="Message cannot be empty"):
+            await note_to_self("Buy milk", "")
+
+        # Test invalid priority
+        with pytest.raises(ValueError, match="Priority must be one of: low, normal, high"):
+            await note_to_self("Buy milk", "Buy milk", "urgent")
+
+    @pytest.mark.asyncio
+    @patch('faf.mcp_tools.note_to_self_sync')
+    async def test_note_to_self_with_priority(self, mock_sync_func):
+        """Test note_to_self with priority parameter."""
+        from faf.mcp_tools import note_to_self
+
+        mock_sync_func.return_value = json.dumps({
+            "command": "note_to_self",
+            "payload": {"message": "Buy milk"},
+            "prompt": "Buy milk."
+        })
+
+        result = await note_to_self("Buy milk.", "Buy milk", "high")
+        
+        assert result["payload"]["priority"] == "high"
+
+    @pytest.mark.asyncio
+    async def test_save_url_validation(self):
+        """Test save_url input validation."""
+        from faf.mcp_tools import save_url
+
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty"):
+            await save_url("", "https://example.com")
+
+        # Test empty URL
+        with pytest.raises(ValueError, match="URL cannot be empty"):
+            await save_url("Check this out", "")
+
+        # Test invalid URL without protocol
+        with pytest.raises(ValueError, match="URL must start with http:// or https://"):
+            await save_url("Check this out", "example.com")
+
+        # Test URL with spaces
+        with pytest.raises(ValueError, match="URL cannot contain spaces"):
+            await save_url("Check this out", "https://example .com")
+
+        # Test URL without domain
+        with pytest.raises(ValueError, match="URL must contain a domain with a dot"):
+            await save_url("Check this out", "https://localhost")
+
+    @pytest.mark.asyncio
+    async def test_journaling_topic_validation(self):
+        """Test journaling_topic input validation."""
+        from faf.mcp_tools import journaling_topic
+
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty"):
+            await journaling_topic("", "My day today")
+
+        # Test empty topic
+        with pytest.raises(ValueError, match="Topic cannot be empty"):
+            await journaling_topic("Journal about my day", "")
+
+        # Test empty category
+        with pytest.raises(ValueError, match="Category cannot be empty"):
+            await journaling_topic("Journal about my day", "My day today", "")
+
+    @pytest.mark.asyncio
+    @patch('faf.mcp_tools.journaling_topic_sync')
+    async def test_journaling_topic_with_category(self, mock_sync_func):
+        """Test journaling_topic with category parameter."""
+        from faf.mcp_tools import journaling_topic
+
+        mock_sync_func.return_value = json.dumps({
+            "command": "journaling_topic",
+            "payload": {"topic": "My day today"},
+            "prompt": "Journal about my day."
+        })
+
+        result = await journaling_topic("Journal about my day.", "My day today", "personal")
+        
+        assert result["payload"]["category"] == "personal"
+
+    @pytest.mark.asyncio
+    async def test_va_request_validation(self):
+        """Test va_request input validation."""
+        from faf.mcp_tools import va_request
+
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty"):
+            await va_request("", "Book restaurant", "Book a table")
+
+        # Test empty title
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            await va_request("VA: Book a restaurant", "", "Book a table")
+
+        # Test empty request
+        with pytest.raises(ValueError, match="Request cannot be empty"):
+            await va_request("VA: Book a restaurant", "Book restaurant", "")
+
+        # Test missing VA keywords
+        with pytest.raises(ValueError, match="VA requests must include"):
+            await va_request("Book a restaurant", "Book restaurant", "Book a table")
+
+        # Test invalid urgency
+        with pytest.raises(ValueError, match="Urgency must be one of"):
+            await va_request("VA: Book a restaurant", "Book restaurant", "Book a table", "critical")
+
+        # Test title too long
+        long_title = "A" * 101
+        with pytest.raises(ValueError, match="Title should be short"):
+            await va_request("VA: Book a restaurant", long_title, "Book a table")
+
+    @pytest.mark.asyncio
+    @patch('faf.mcp_tools.va_request_sync')
+    async def test_va_request_with_urgency(self, mock_sync_func):
+        """Test va_request with urgency parameter."""
+        from faf.mcp_tools import va_request
+
+        mock_sync_func.return_value = json.dumps({
+            "command": "va_request",
+            "payload": {"title": "Book restaurant", "request": "Book a table"},
+            "prompt": "VA: Book a restaurant."
+        })
+
+        result = await va_request("VA: Book a restaurant.", "Book restaurant", "Book a table", "urgent")
+        
+        assert result["payload"]["urgency"] == "urgent"
+
+    def test_validation_functions(self):
+        """Test individual validation functions."""
+        from faf.mcp_tools import (
+            validate_non_empty_string, validate_url, validate_date_format, 
+            validate_priority, validate_va_keywords
+        )
+
+        # Test validate_non_empty_string
+        with pytest.raises(ValueError, match="Test cannot be empty"):
+            validate_non_empty_string("", "Test")
+        
+        with pytest.raises(ValueError, match="Test cannot be empty"):
+            validate_non_empty_string("   ", "Test")
+
+        # Test validate_url
+        with pytest.raises(ValueError, match="URL must start with"):
+            validate_url("example.com")
+
+        # Test validate_date_format
+        with pytest.raises(ValueError, match="Date cannot contain"):
+            validate_date_format("tomorrow 3pm")
+
+        # Test validate_priority
+        with pytest.raises(ValueError, match="Priority must be one of"):
+            validate_priority("critical")
+
+        # Test validate_va_keywords
+        with pytest.raises(ValueError, match="VA requests must include"):
+            validate_va_keywords("Book a restaurant")
