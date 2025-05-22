@@ -14,7 +14,8 @@ import os
 import sys
 
 # Import MCP SDK
-from mcp import FastMCP, MCPToolDefinition, MCPToolCall, MCPToolResult, MCPToolError
+from fastmcp import FastMCP
+from mcp import MCPToolDefinition, MCPToolCall, MCPToolResult, MCPToolError
 from fastapi import FastAPI, Request
 
 # Local application imports

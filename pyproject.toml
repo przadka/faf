@@ -16,7 +16,7 @@ dependencies = [
     "docstring-parser",
     "litellm",
     "icecream",
-    "mcp[cli]",
+    "fastmcp",
     "uvicorn"
 ]
 license = { text = "MIT" }

@@ -154,7 +154,7 @@ To run the MCP server:
 
 ```bash
 # Install MCP dependencies if not already installed
-pip install "mcp[cli]" uvicorn
+pip install fastmcp uvicorn
 
 # Start the server
 faf-mcp --host 127.0.0.1 --port 5000
@@ -170,11 +170,11 @@ The MCP server provides the following tools:
 You can connect to the server using any MCP-compatible client, or use the MCP CLI for testing:
 
 ```bash
-# Test a connection to the server
-mcp capabilities --url http://127.0.0.1:5000
+# Test a connection to the server using curl
+curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"capabilities/get","params":{},"id":1}'
 
 # Execute a tool
-mcp tools execute --url http://127.0.0.1:5000 --tool note_to_self --args '{"prompt": "Test note", "message": "Remember to test the MCP server"}'
+curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"tools/execute","params":{"name":"note_to_self","arguments":{"prompt":"Test note","message":"Remember to test the MCP server"}},"id":2}'
 ```
 
 ## Contributing
