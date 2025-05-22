@@ -35,4 +35,11 @@ dev = [
 ]
 
 [project.scripts]
-faf = "src.faf.main:main" 
+faf = "src.faf.main:main"
+
+[tool.ruff]
+line-length = 100
+exclude = [".git", "__pycache__", "build", "dist", ".nox", ".aws-sam", "integrations/autokey.py", "integrations/gsheets.gs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"] 

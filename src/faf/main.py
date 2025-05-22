@@ -35,7 +35,7 @@ def get_tool_function_info(tool_func):
     sig = inspect.signature(tool_func)
     for name, param in sig.parameters.items():
         function_info["function"]["parameters"]["properties"][name] = {
-            "type": "string", 
+            "type": "string",
             "description": next((p.description for p in doc.params if p.arg_name == name), "")
         }
         if param.default is inspect.Parameter.empty:
@@ -48,13 +48,22 @@ def collect_functions_info(*funcs):
 
 
 def tools_list():
-    return collect_functions_info(follow_up_then, note_to_self, save_url, va_request, journaling_topic)
+    return collect_functions_info(
+        follow_up_then, note_to_self, save_url, va_request, journaling_topic
+    )
 
 def call_tool_function(action):
     func_name = action['name']
-    arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else action['arguments']
-    tool_functions = {"follow_up_then": follow_up_then, "note_to_self": note_to_self, "save_url": save_url, "va_request": va_request, "journaling_topic": journaling_topic}
-    
+    arguments = json.loads(action['arguments']) if isinstance(action['arguments'], str) else \
+        action['arguments']
+    tool_functions = {
+        "follow_up_then": follow_up_then,
+        "note_to_self": note_to_self,
+        "save_url": save_url,
+        "va_request": va_request,
+        "journaling_topic": journaling_topic,
+    }
+
     if func_name in tool_functions:
         print(f"Calling {func_name} with arguments: ", arguments)
         return {
@@ -73,7 +82,7 @@ def write_to_file(data: str) -> str:
 
     Returns:
         str: Success message with the filename and directory where the file is saved.
-    
+
     Raises:
         ValueError: If the data is not a valid JSON string.
     """
@@ -82,7 +91,9 @@ def write_to_file(data: str) -> str:
         # Attempt to parse the JSON string to a dictionary
         data_dict = json.loads(data)
     except json.JSONDecodeError as e:
-        raise ValueError("Failed to decode 'data' from JSON. Ensure it is a properly formatted JSON string.") from e
+        raise ValueError(
+            "Failed to decode 'data' from JSON. Ensure it is a properly formatted JSON string."
+        ) from e
 
     # Determine the output directory, defaulting to the current file's directory if not set
     directory = os.getenv('FAF_JSON_OUTPUT_PATH', os.path.dirname(os.path.abspath(__file__)))
@@ -118,15 +129,18 @@ def improve_user_input(input_text: str, user_name: str, custom_rules, model: str
     """
 
 
-    
+
     tools_list_str = ', '.join([item['function']['name'] for item in tools_list()])
 
-    system_prompt = "You are a helpful assistant tasked assiining the user's input to the relevant tool."
+    system_prompt = (
+        "You are a helpful assistant tasked assiining the user's input to the relevant tool."
+    )
 
     user_prompt = f"""
 
 ## Instructions
-You are tasked with picking a relevant tool to process the user's input and add it to the response, as #tool_name.
+You are tasked with picking a relevant tool to process the user's input and add it to the
+response, as #tool_name.
 
 Here is a list of available tools: {tools_list_str}.
 
@@ -134,14 +148,15 @@ Here is a list of available tools: {tools_list_str}.
 - Focus only on assigning the user's input to the correct tool.
 - Never add any new information or requests to the user's input.
 - Never add any comments, observations, or opinions to the user's input when processing it.
-- Never modify the user's input in any way unless you are making spelling, grammar, or punctuation corrections.
+- Never modify the user's input unless you are making spelling, grammar, or punctuation corrections.
 - If the user mentions a day or date, ALWAYS use the 'follow_up_then' tool.
 - If only a URL is provided, ALWAYS use the 'save_url' tool.
 - Do not use follow_up_then if no date or time reference is provided.
 - Use the 'va_request' tool ONLY if 'virtual assistant' or 'VA' is mentioned.
 - Use the 'journaling_topic' tool ONLY if the user explicitly mentions journal or journaling.
 - Journaling topics should be short and concise, with any relevant details included.
-- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message as it is.
+- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input
+  as the message.
 {custom_rules}
 
 ## Examples
@@ -170,7 +185,7 @@ Here is the user input you need to process:
 
 Output full user input text and the relevant tool name. Nothing else.
 """
-    
+
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -181,14 +196,20 @@ Output full user input text and the relevant tool name. Nothing else.
         assistant_message = response.choices[0].message
     except Exception as e:
         return json.dumps({"error": "Failed to process input with LLM.", "details": str(e)})
-    
+
     improved_text = assistant_message.content
 
     print("Text with tool: " + improved_text)
     return improved_text
 
 
-def convert_to_json(request: str, user_name: str, custom_rules: str, model: str, tools_list: List[Dict[str, Any]]) -> str:
+def convert_to_json(
+    request: str,
+    user_name: str,
+    custom_rules: str,
+    model: str,
+    tools_list: List[Dict[str, Any]],
+) -> str:
     """
     Converts user requests into structured JSON using predefined LLM rules and functions.
 
@@ -204,7 +225,7 @@ def convert_to_json(request: str, user_name: str, custom_rules: str, model: str,
     """
 
     tools_names = [item['function']['name'] for item in tools_list if item['type'] == 'function']
-    tools_names_str = ', '.join(tools_names) 
+    tools_names_str = ', '.join(tools_names)
 
     # Define the instructions for the LLM based on the given parameters
     system_prompt = f"""
@@ -214,10 +235,12 @@ You use various tools to process the user's requests and provide assistance.
 You can have to FOLLOW THESE RULES srictly when responding to the user's input:
 
 - User name is {user_name}. Avoid using it when responding directly to the user.
-- Always try to only grammar, spelling, or punctuation mistakes in user's input before passing it to the tools.
+- Always try to only fix grammar, spelling, or punctuation mistakes in user's input
+  before passing it to the tools.
 - Never add any new information or requests to the user's input.
 - Never add any comments, observations, or opinions to the user's input when processing it.
-- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input as the message.
+- If unsure which tool to use, just use the 'note_to_self' tool, passing the user's input
+  as the message.
 {custom_rules}
 """
 
@@ -230,7 +253,8 @@ User provided the following input:
 
 Use the following tools to process the user's request: {tools_names_str}.
 
-You MUST use at least one tool to process the user's input. Do not include hashtag in your input to the tools.
+You MUST use at least one tool to process the user's input. Do not include hashtag in your
+input to tools.
 """
 
     # Structure the messages as required by the completion function
@@ -253,7 +277,10 @@ You MUST use at least one tool to process the user's input. Do not include hasht
 
     # Process tool calls from the LLM response
     try:
-        actions = [{"name": arg.function.name, "arguments": arg.function.arguments} for arg in assistant_message.tool_calls]
+        actions = [
+            {"name": arg.function.name, "arguments": arg.function.arguments}
+            for arg in assistant_message.tool_calls
+        ]
         tool_outputs = [call_tool_function(action) for action in actions]
         output = tool_outputs[0]['output']
         output = json.loads(output)
@@ -280,38 +307,44 @@ def load_configuration():
     CUSTOM_RULES_FILE = os.getenv("FAF_CUSTOM_RULES_FILE") or ""
 
     CUSTOM_RULES = ""
-    
+
     try:
         with open(CUSTOM_RULES_FILE, "r") as file:
             CUSTOM_RULES = file.read()
     except FileNotFoundError:
         CUSTOM_RULES_FILE = None
-    
+
     return MODEL, USER_NAME, CUSTOM_RULES
 
 def lambda_handler(event, context):
     """
-    Handles requests sent to AWS Lambda, converts the request into structured JSON, and processes it using specified tools.
+    Handles requests sent to AWS Lambda, converts the request into structured JSON, and
+    processes it using specified tools.
 
-    This function is designed to act as an interface for an AWS Lambda to handle inputs from external triggers (e.g., AWS API Gateway).
-    It extracts the 'request' from the event object, validates it, and uses an LLM model to process the input.
+    This function is designed to act as an interface for an AWS Lambda to handle inputs from
+    external triggers (e.g., AWS API Gateway). It extracts the 'request' from the event object,
+    validates it, and uses an LLM model to process the input.
 
     Parameters:
-        event (dict): The event dictionary that AWS Lambda receives from the triggering service. It must contain:
-                      - 'request': a string representing the user input.
-        context (LambdaContext): The runtime information provided by AWS Lambda, which is not used in this function but required by the signature.
+        event (dict): The event dictionary that AWS Lambda receives from the triggering service.
+            It must contain:
+            - 'request': a string representing the user input.
+        context (LambdaContext): The runtime information provided by AWS Lambda, which is not
+            used in this function but required by the signature.
 
     Returns:
-        dict: A dictionary with the keys 'statusCode' and 'body'. The 'body' is a JSON string that represents:
-              - The processed output when successful.
-              - An error message when any part of the processing fails.
+        dict: A dictionary with the keys 'statusCode' and 'body'. The 'body' is a JSON string
+            that represents:
+            - The processed output when successful.
+            - An error message when any part of the processing fails.
 
     The function checks for necessary environment variables, specifically:
         - OPENAI_API_KEY: Required for API access.
         - USER_NAME: Optional, defaults to 'unknown' if not set.
 
-    It expects the Lambda environment to be configured with necessary models and tool configurations.
-    Error responses follow typical HTTP status codes for ease of integration with HTTP-based APIs.
+    It expects the Lambda environment to be configured with necessary models and tool
+    configurations. Error responses follow typical HTTP status codes for ease of integration
+    with HTTP-based APIs.
 
     Examples of `event` structure:
         {'request': 'Your request string here'}
@@ -333,7 +366,9 @@ def lambda_handler(event, context):
         if not api_key:
             return {
                 'statusCode': 403,
-                'body': json.dumps('API Key not found. Please set your OPENAI_API_KEY environment variable.')
+                'body': json.dumps(
+                    'API Key not found. Please set your OPENAI_API_KEY environment variable.'
+                ),
             }
 
         # Process the input to convert it to JSON
@@ -359,7 +394,7 @@ def lambda_handler(event, context):
 def main():
 
     MODEL, USER_NAME, CUSTOM_RULES = load_configuration()
-    
+
     dotenv.load_dotenv()
 
     try:
