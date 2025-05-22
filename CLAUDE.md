@@ -53,8 +53,11 @@ python src/faf/main.py "Your text input here"
 # Start the MCP server with stdio transport (default, recommended for desktop clients)
 python src/faf/mcp_server.py
 
-# Start the MCP server with HTTP transport (for remote deployments)
+# Start the MCP server with HTTP transport (uses streamable-http protocol)
 python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
+
+# Customize path and logging level
+python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
 ```
 
 ### MCP Client Configuration

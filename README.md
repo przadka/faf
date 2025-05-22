@@ -236,11 +236,14 @@ For stdio transport (most common):
 
 #### HTTP Transport (For Remote Deployments)
 
-HTTP transport is useful for remote deployments and testing:
+HTTP transport uses FastMCP's streamable-http protocol for remote deployments and testing:
 
 ```bash
-# Start the server with HTTP transport
+# Start the server with HTTP transport (uses streamable-http)
 python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
+
+# Customize the mount path and logging level
+python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
 ```
 
 The MCP server provides the following tools:
@@ -252,14 +255,17 @@ The MCP server provides the following tools:
 
 **Testing HTTP Transport:**
 
-You can test the HTTP transport using curl:
+You can test the streamable HTTP transport using curl or any HTTP client:
 
 ```bash
-# Test a connection to the server
+# Test a connection to the server (default path /mcp)
 curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"capabilities/get","params":{},"id":1}'
 
 # Execute a tool
 curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"tools/execute","params":{"name":"note_to_self","arguments":{"prompt":"Test note","message":"Remember to test the MCP server"}},"id":2}'
+
+# If using a custom path, adjust the URL accordingly
+curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"capabilities/get","params":{},"id":1}'
 ```
 
 #### Troubleshooting MCP Setup

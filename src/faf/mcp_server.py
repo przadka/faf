@@ -15,8 +15,6 @@ import sys
 
 # Import MCP SDK
 from mcp.server.fastmcp import FastMCP
-from fastapi import FastAPI
-import uvicorn
 
 # Local application imports
 from faf.main import load_configuration
@@ -64,38 +62,30 @@ class FafMcpServer:
         """
         logger.info("Starting MCP Server with stdio transport")
 
-        # Run the stdio server using FastMCP's built-in functionality
-        # FastMCP.run() creates its own event loop, so we don't need async here
+        # Use FastMCP's recommended pattern with explicit transport specification
         self.mcp_server.run(transport="stdio")
 
-    def run_http(self, host: str = '127.0.0.1', port: int = 5000):
+    def run_http(self, host: str = '127.0.0.1', port: int = 5000, path: str = "/mcp",
+                 log_level: str = "info"):
         """
-        Run the MCP server using HTTP transport.
+        Run the MCP server using streamable HTTP transport.
 
         Args:
             host: Host address to bind to
             port: Port to listen on
+            path: URL path to mount the MCP server on
+            log_level: Logging level for the server
         """
-        logger.info(f"Starting MCP Server with HTTP transport on {host}:{port}")
-        # Create a new FastAPI app
-        app = FastAPI(title=SERVER_NAME, version=SERVER_VERSION, description=SERVER_DESCRIPTION)
+        logger.info(f"Starting MCP Server with streamable HTTP transport on {host}:{port}{path}")
 
-        # Mount the FastMCP app to a specific path
-        from starlette.routing import Mount
-
-        # Get the streamable HTTP app from FastMCP and add it to the main app
-        mcp_app = self.mcp_server.streamable_http_app()
-
-        # Add some additional routes for status/health checks if needed
-        @app.get("/health")
-        async def health_check():
-            return {"status": "ok"}
-
-        # Include the MCP app
-        app.routes.append(Mount("/mcp", app=mcp_app))
-
-        # Start the Uvicorn server with our app
-        uvicorn.run(app, host=host, port=port)
+        # Use FastMCP's recommended streamable-http transport pattern
+        self.mcp_server.run(
+            transport="streamable-http",
+            host=host,
+            port=port,
+            path=path,
+            log_level=log_level
+        )
 
 def main():
     """Main entry point for the MCP server."""
@@ -109,6 +99,11 @@ def main():
                           help='Host to bind to (HTTP transport only)')
         parser.add_argument('--port', type=int, default=5000,
                           help='Port to listen on (HTTP transport only)')
+        parser.add_argument('--path', default='/mcp',
+                          help='URL path to mount MCP server on (HTTP transport only)')
+        parser.add_argument('--log-level', default='info',
+                          choices=['debug', 'info', 'warning', 'error'],
+                          help='Logging level (default: info)')
         args = parser.parse_args()
 
         # Load environment variables
@@ -127,7 +122,12 @@ def main():
         if args.transport == 'stdio':
             server.run_stdio()
         else:
-            server.run_http(args.host, args.port)
+            server.run_http(
+                host=args.host,
+                port=args.port,
+                path=args.path,
+                log_level=getattr(args, 'log_level')
+            )
 
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
