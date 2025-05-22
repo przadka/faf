@@ -150,14 +150,46 @@ The script will package the code and dependencies, then run `sam build` and `sam
 
 FAF includes an MCP (Model Context Protocol) server that allows integration with MCP-compatible clients. The MCP server exposes FAF's functionality as tools that can be invoked by MCP clients.
 
-To run the MCP server:
+The server supports two transport protocols:
+
+#### Stdio Transport (Recommended for Desktop Clients)
+
+Stdio transport is the preferred method for local development and desktop applications like Claude Desktop and VS Code extensions:
 
 ```bash
-# Install MCP dependencies if not already installed
-pip install fastmcp uvicorn
+# Start the server with stdio transport (default)
+python src/faf/mcp_server.py
 
-# Start the server
-faf-mcp --host 127.0.0.1 --port 5000
+# Or explicitly specify stdio transport
+python src/faf/mcp_server.py --transport stdio
+```
+
+**Claude Desktop Configuration Example:**
+
+Add this to your Claude Desktop configuration file:
+
+```json
+{
+  "mcpServers": {
+    "faf": {
+      "command": "python",
+      "args": ["/path/to/faf/src/faf/mcp_server.py"],
+      "env": {
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "FAF_JSON_OUTPUT_PATH": "/path/to/your/output/folder"
+      }
+    }
+  }
+}
+```
+
+#### HTTP Transport (For Remote Deployments)
+
+HTTP transport is useful for remote deployments and testing:
+
+```bash
+# Start the server with HTTP transport
+python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
 ```
 
 The MCP server provides the following tools:
@@ -167,10 +199,12 @@ The MCP server provides the following tools:
 - `va_request` - Send a request to a virtual assistant
 - `journaling_topic` - Save a journaling topic
 
-You can connect to the server using any MCP-compatible client, or use the MCP CLI for testing:
+**Testing HTTP Transport:**
+
+You can test the HTTP transport using curl:
 
 ```bash
-# Test a connection to the server using curl
+# Test a connection to the server
 curl -X POST http://127.0.0.1:5000/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"capabilities/get","params":{},"id":1}'
 
 # Execute a tool

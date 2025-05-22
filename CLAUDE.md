@@ -47,6 +47,16 @@ pip install -r requirements.txt
 python src/faf/main.py "Your text input here"
 ```
 
+### Running the MCP Server
+
+```bash
+# Start the MCP server with stdio transport (default, recommended for desktop clients)
+python src/faf/mcp_server.py
+
+# Start the MCP server with HTTP transport (for remote deployments)
+python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
+```
+
 ### Packaging
 
 To create a single executable file:
