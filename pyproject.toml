@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "faf"
+version = "0.1.0"
+description = "Fire And Forget (FAF) - CLI tool for GTD workflows using LLMs."
+authors = [
+    { name = "Michal Przadka" }
+]
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "python-dotenv",
+    "docstring-parser",
+    "litellm",
+    "icecream"
+]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.urls]
+Homepage = "https://github.com/przadka/faf"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "nox",
+    "black"
+]
+
+[project.scripts]
+faf = "src.faf.main:main" 
