@@ -60,15 +60,19 @@ def test_load_configuration(monkeypatch):
     """Test that load_configuration loads model, user name, and custom rules from environment and file."""
     monkeypatch.setenv("FAF_MODEL", "test-model")
     monkeypatch.setenv("FAF_USER_NAME", "TestUser")
+    # Use a context manager to ensure file cleanup even if assertions fail
     with tempfile.NamedTemporaryFile("w", delete=False) as f:
         f.write("- Custom rule\n")
         rules_path = f.name
-    monkeypatch.setenv("FAF_CUSTOM_RULES_FILE", rules_path)
-    model, user, rules = main.load_configuration()
-    assert model == "test-model"
-    assert user == "TestUser"
-    assert "Custom rule" in rules
-    os.remove(rules_path)
+    try:
+        monkeypatch.setenv("FAF_CUSTOM_RULES_FILE", rules_path)
+        model, user, rules = main.load_configuration()
+        assert model == "test-model"
+        assert user == "TestUser"
+        assert "Custom rule" in rules
+    finally:
+        # Ensure cleanup happens even if assertions fail
+        os.remove(rules_path)
 
 def test_improve_user_input_mocked():
     """Test improve_user_input returns the expected improved text using a mocked LLM response."""
