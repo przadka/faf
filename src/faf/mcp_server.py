@@ -55,13 +55,8 @@ class FafMcpServer:
         # Create FastAPI app
         self.app = FastAPI(title=SERVER_NAME, version=SERVER_VERSION)
 
-        # Create MCP server
-        self.mcp_server = FastMCP(
-            SERVER_NAME,  # Positional name argument
-            app=self.app,
-            version=SERVER_VERSION,
-            description=SERVER_DESCRIPTION
-        )
+        # Create MCP server - pass only name as recommended since 2.3.4
+        self.mcp_server = FastMCP(SERVER_NAME)
 
         # Register tools using the decorator-based approach
         self._register_tools()
@@ -101,9 +96,15 @@ class FafMcpServer:
             host: Host address to bind to
             port: Port to listen on
         """
-        import uvicorn
         logger.info(f"Starting MCP Server on {host}:{port}")
-        uvicorn.run(self.app, host=host, port=port)
+        # Pass settings to run() as recommended since 2.3.4
+        self.mcp_server.run(
+            app=self.app,
+            host=host,
+            port=port,
+            version=SERVER_VERSION,
+            description=SERVER_DESCRIPTION
+        )
 
 def main():
     """Main entry point for the MCP server."""
