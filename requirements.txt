@@ -5,6 +5,7 @@ litellm==1.37.9
 pydantic
 pyinstaller
 pytest
+pytest-asyncio
 python-dotenv
 requests
 ruff
