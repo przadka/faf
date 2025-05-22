@@ -31,13 +31,13 @@ fi
 cp -r src/faf/*.py package
 
 # Change directory to 'package' and create a ZIP archive
-cd package
+cd package || { echo "Error: Failed to change to package directory"; exit 1; }
 zip -r ../deployment_package.zip .
 
 # Return to the parent directory and run AWS SAM commands
 cd ..
-sam build
-sam deploy
+sam build || { echo "Error: SAM build failed"; exit 1; }
+sam deploy || { echo "Error: SAM deploy failed"; exit 1; }
 
 # Deactivate the virtual environment
 deactivate
