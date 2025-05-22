@@ -5,8 +5,6 @@ This module wraps the FAF tools with MCP decorators to make them available via t
 """
 
 import json
-import functools
-from typing import Any, Callable, Awaitable, Dict
 
 # Import the original synchronous FAF tool functions
 from src.faf.tools import (

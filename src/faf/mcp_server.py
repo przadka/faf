@@ -14,12 +14,10 @@ import sys
 
 # Import MCP SDK
 from fastmcp import FastMCP
-from fastapi import FastAPI
 
 # Local application imports
 from src.faf.main import load_configuration
 # Import the MCP tools to ensure they are registered via decorators
-from src.faf import mcp_tools
 
 # Configure logging
 logging.basicConfig(
