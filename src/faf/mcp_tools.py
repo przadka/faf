@@ -17,30 +17,13 @@ from src.faf.tools import (
     journaling_topic as journaling_topic_sync,
 )
 
-import anyio.to_thread
-from mcp.types import CallToolRequestParams as MCPToolCall
+# Import the shared FastMCP instance
+from src.faf.mcp_server import mcp
 
-# Define our own MCPToolResult since it's not available in mcp.types
-class MCPToolResult:
-    """Result of a tool call."""
+# Remove custom decorator, MCPToolResult, and manual thread-pool offloading
 
-    def __init__(self, result: Dict[str, Any]):
-        self.result = result
-
-# Create a tool decorator since it's not directly available
-def tool(func: Callable[..., Awaitable[MCPToolResult]]) -> Callable[..., Awaitable[MCPToolResult]]:
-    """Decorator to mark a function as an MCP tool."""
-    @functools.wraps(func)
-    async def wrapper(call: MCPToolCall) -> MCPToolResult:
-        return await func(call)
-
-    # Store the original function for later registration
-    wrapper.__mcp_tool__ = True
-    return wrapper
-
-
-@tool
-async def follow_up_then(call: MCPToolCall) -> MCPToolResult:
+@mcp.tool()
+async def follow_up_then(call: dict) -> dict:
     """
     Send a follow-up reminder with the given date and message.
     Use ONLY IF there is a specific date provided or
@@ -62,23 +45,15 @@ async def follow_up_then(call: MCPToolCall) -> MCPToolResult:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.arguments.get("prompt", "")
-    date = call.arguments.get("date", "")
-    message = call.arguments.get("message", "")
-
-    # Offload the synchronous function call to a thread pool
-    result_json = await anyio.to_thread.run_sync(
-        follow_up_then_sync, prompt, date, message
-    )
-
-    # Parse the JSON string result
-    result_dict = json.loads(result_json)
-
-    return MCPToolResult(result=result_dict)
+    prompt = call.get("prompt", "")
+    date = call.get("date", "")
+    message = call.get("message", "")
+    result_json = follow_up_then_sync(prompt, date, message)
+    return json.loads(result_json)
 
 
-@tool
-async def note_to_self(call: MCPToolCall) -> MCPToolResult:
+@mcp.tool()
+async def note_to_self(call: dict) -> dict:
     """
     Send a note to user with the given message.
     Useful for simple todos, reminders and short-term follow ups.
@@ -90,22 +65,14 @@ async def note_to_self(call: MCPToolCall) -> MCPToolResult:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.arguments.get("prompt", "")
-    message = call.arguments.get("message", "")
-
-    # Offload the synchronous function call to a thread pool
-    result_json = await anyio.to_thread.run_sync(
-        note_to_self_sync, prompt, message
-    )
-
-    # Parse the JSON string result
-    result_dict = json.loads(result_json)
-
-    return MCPToolResult(result=result_dict)
+    prompt = call.get("prompt", "")
+    message = call.get("message", "")
+    result_json = note_to_self_sync(prompt, message)
+    return json.loads(result_json)
 
 
-@tool
-async def save_url(call: MCPToolCall) -> MCPToolResult:
+@mcp.tool()
+async def save_url(call: dict) -> dict:
     """
     Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
@@ -116,26 +83,16 @@ async def save_url(call: MCPToolCall) -> MCPToolResult:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.arguments.get("prompt", "")
-    url = call.arguments.get("url", "")
-
-    # Offload the synchronous function call to a thread pool
-    result_json = await anyio.to_thread.run_sync(
-        save_url_sync, prompt, url
-    )
-
-    # Check for error response
+    prompt = call.get("prompt", "")
+    url = call.get("url", "")
+    result_json = save_url_sync(prompt, url)
     if result_json.startswith("Error:"):
         raise ValueError(result_json)
-
-    # Parse the JSON string result
-    result_dict = json.loads(result_json)
-
-    return MCPToolResult(result=result_dict)
+    return json.loads(result_json)
 
 
-@tool
-async def journaling_topic(call: MCPToolCall) -> MCPToolResult:
+@mcp.tool()
+async def journaling_topic(call: dict) -> dict:
     """
     Save a journaling topic to the idea list, to write about later.
 
@@ -146,22 +103,14 @@ async def journaling_topic(call: MCPToolCall) -> MCPToolResult:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.arguments.get("prompt", "")
-    topic = call.arguments.get("topic", "")
-
-    # Offload the synchronous function call to a thread pool
-    result_json = await anyio.to_thread.run_sync(
-        journaling_topic_sync, prompt, topic
-    )
-
-    # Parse the JSON string result
-    result_dict = json.loads(result_json)
-
-    return MCPToolResult(result=result_dict)
+    prompt = call.get("prompt", "")
+    topic = call.get("topic", "")
+    result_json = journaling_topic_sync(prompt, topic)
+    return json.loads(result_json)
 
 
-@tool
-async def va_request(call: MCPToolCall) -> MCPToolResult:
+@mcp.tool()
+async def va_request(call: dict) -> dict:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a
     virtual assistant or VA. Use ONLY if the prompt includes the words "virtual assistant",
@@ -175,17 +124,9 @@ async def va_request(call: MCPToolCall) -> MCPToolResult:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.arguments.get("prompt", "")
-    title = call.arguments.get("title", "")
-    request = call.arguments.get("request", "")
-
-    # Offload the synchronous function call to a thread pool
-    result_json = await anyio.to_thread.run_sync(
-        va_request_sync, prompt, title, request
-    )
-
-    # Parse the JSON string result
-    result_dict = json.loads(result_json)
-
-    return MCPToolResult(result=result_dict)
+    prompt = call.get("prompt", "")
+    title = call.get("title", "")
+    request = call.get("request", "")
+    result_json = va_request_sync(prompt, title, request)
+    return json.loads(result_json)
 

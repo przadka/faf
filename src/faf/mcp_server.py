@@ -18,14 +18,8 @@ from fastapi import FastAPI
 
 # Local application imports
 from src.faf.main import load_configuration
-# Import the MCP tools directly - they're already decorated with @tool
-from src.faf.mcp_tools import (
-    follow_up_then,
-    note_to_self,
-    save_url,
-    va_request,
-    journaling_topic
-)
+# Import the MCP tools to ensure they are registered via decorators
+from src.faf import mcp_tools
 
 # Configure logging
 logging.basicConfig(
@@ -39,6 +33,9 @@ SERVER_NAME = "faf-mcp-server"
 SERVER_VERSION = "0.1.0"
 SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF) command-line tool"
 
+# Create the FastMCP instance at the module level for use by decorators
+mcp = FastMCP(SERVER_NAME)
+
 class FafMcpServer:
     """
     MCP Server implementation for FAF using the FastMCP SDK.
@@ -51,42 +48,10 @@ class FafMcpServer:
         """Initialize the MCP server."""
         # Load FAF configuration
         self.model, self.user_name, self.custom_rules = load_configuration()
-
-        # Create FastAPI app
-        self.app = FastAPI(title=SERVER_NAME, version=SERVER_VERSION)
-
-        # Create MCP server - pass only name as recommended since 2.3.4
-        self.mcp_server = FastMCP(SERVER_NAME)
-
-        # Register tools using the decorator-based approach
-        self._register_tools()
-
+        # FastAPI app is not needed for FastMCP, so remove it
+        # self.app = FastAPI(title=SERVER_NAME, version=SERVER_VERSION)
+        self.mcp_server = mcp  # Use the shared instance
         logger.info(f"MCP Server initialized with model: {self.model}")
-
-    def _register_tools(self):
-        """Register FAF tools with the MCP server."""
-        # In the current version of FastMCP, tools are registered using the decorator pattern
-        # Add the tools to the tool manager by decorating them again
-
-        @self.mcp_server.tool(name="follow_up_then", description=follow_up_then.__doc__)
-        async def follow_up_then_wrapper(call):
-            return await follow_up_then(call)
-
-        @self.mcp_server.tool(name="note_to_self", description=note_to_self.__doc__)
-        async def note_to_self_wrapper(call):
-            return await note_to_self(call)
-
-        @self.mcp_server.tool(name="save_url", description=save_url.__doc__)
-        async def save_url_wrapper(call):
-            return await save_url(call)
-
-        @self.mcp_server.tool(name="va_request", description=va_request.__doc__)
-        async def va_request_wrapper(call):
-            return await va_request(call)
-
-        @self.mcp_server.tool(name="journaling_topic", description=journaling_topic.__doc__)
-        async def journaling_topic_wrapper(call):
-            return await journaling_topic(call)
 
     def run(self, host: str = '127.0.0.1', port: int = 5000):
         """
@@ -97,13 +62,10 @@ class FafMcpServer:
             port: Port to listen on
         """
         logger.info(f"Starting MCP Server on {host}:{port}")
-        # Pass settings to run() as recommended since 2.3.4
         self.mcp_server.run(
-            app=self.app,
+            "streamable-http",  # Use HTTP transport
             host=host,
             port=port,
-            version=SERVER_VERSION,
-            description=SERVER_DESCRIPTION
         )
 
 def main():
