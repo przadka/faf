@@ -8,19 +8,24 @@ enabling integration with MCP-compatible clients using the official MCP SDK.
 Based on MCP Specification 2025-03-26: https://modelcontextprotocol.io/specification/2025-03-26
 """
 
-import json
 import logging
 import os
 import sys
 
 # Import MCP SDK
 from fastmcp import FastMCP
-from mcp import MCPToolDefinition, MCPToolCall, MCPToolResult, MCPToolError
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 # Local application imports
-from src.faf.tools import follow_up_then, note_to_self, save_url, va_request, journaling_topic
-from src.faf.main import get_tool_function_info, load_configuration
+from src.faf.main import load_configuration
+# Import the MCP tools directly - they're already decorated with @tool
+from src.faf.mcp_tools import (
+    follow_up_then,
+    note_to_self,
+    save_url,
+    va_request,
+    journaling_topic
+)
 
 # Configure logging
 logging.basicConfig(
@@ -56,106 +61,19 @@ class FafMcpServer:
             server_version=SERVER_VERSION
         )
 
-        # Register tools
+        # Register tools using the decorator-based approach
         self._register_tools()
 
         logger.info(f"MCP Server initialized with model: {self.model}")
 
     def _register_tools(self):
         """Register FAF tools with the MCP server."""
-        # Register follow_up_then tool
-        self.mcp_server.register_tool(
-            self._create_tool_definition(follow_up_then),
-            self._create_tool_handler(follow_up_then)
-        )
-
-        # Register note_to_self tool
-        self.mcp_server.register_tool(
-            self._create_tool_definition(note_to_self),
-            self._create_tool_handler(note_to_self)
-        )
-
-        # Register save_url tool
-        self.mcp_server.register_tool(
-            self._create_tool_definition(save_url),
-            self._create_tool_handler(save_url)
-        )
-
-        # Register va_request tool
-        self.mcp_server.register_tool(
-            self._create_tool_definition(va_request),
-            self._create_tool_handler(va_request)
-        )
-
-        # Register journaling_topic tool
-        self.mcp_server.register_tool(
-            self._create_tool_definition(journaling_topic),
-            self._create_tool_handler(journaling_topic)
-        )
-
-    def _create_tool_definition(self, func) -> MCPToolDefinition:
-        """
-        Create an MCP tool definition from a FAF tool function.
-
-        Args:
-            func: The FAF tool function
-
-        Returns:
-            MCPToolDefinition for the tool
-        """
-        # Get function signature and docstring information
-        faf_tool_info = get_tool_function_info(func)
-
-        # Create parameter schema for MCP tool
-        parameters = {
-            "type": "object",
-            "properties": {},
-            "required": faf_tool_info["function"]["parameters"]["required"]
-        }
-
-        # Convert parameters
-        for name, param_info in faf_tool_info["function"]["parameters"]["properties"].items():
-            parameters["properties"][name] = {
-                "type": param_info["type"],
-                "description": param_info["description"]
-            }
-
-        # Create and return the tool definition
-        return MCPToolDefinition(
-            name=faf_tool_info["function"]["name"],
-            description=faf_tool_info["function"]["description"],
-            parameters=parameters
-        )
-
-    def _create_tool_handler(self, func):
-        """
-        Create an MCP tool handler function for a FAF tool function.
-
-        Args:
-            func: The FAF tool function
-
-        Returns:
-            Async function that handles the tool call
-        """
-        async def tool_handler(call: MCPToolCall, request: Request) -> MCPToolResult:
-            try:
-                # Execute the FAF tool function with the provided arguments
-                arguments = call.arguments
-
-                # Call the tool function
-                result = func(**arguments)
-
-                # Parse the result (which is a JSON string) to get the tool output
-                result_dict = json.loads(result)
-
-                # Return a successful result
-                return MCPToolResult(result=result_dict)
-            except Exception as e:
-                # Log and return an error
-                logger.exception(f"Error executing tool {func.__name__}: {e}")
-                raise MCPToolError(message=str(e))
-
-        return tool_handler
+        # Register all tools that have been decorated with @tool
+        self.mcp_server.register_tool(follow_up_then)
+        self.mcp_server.register_tool(note_to_self)
+        self.mcp_server.register_tool(save_url)
+        self.mcp_server.register_tool(va_request)
+        self.mcp_server.register_tool(journaling_topic)
 
     def run(self, host: str = '127.0.0.1', port: int = 5000):
         """
@@ -199,3 +117,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
