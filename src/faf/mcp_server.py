@@ -70,12 +70,28 @@ class FafMcpServer:
 
     def _register_tools(self):
         """Register FAF tools with the MCP server."""
-        # Register all tools that have been decorated with @tool
-        self.mcp_server.register_tool(follow_up_then)
-        self.mcp_server.register_tool(note_to_self)
-        self.mcp_server.register_tool(save_url)
-        self.mcp_server.register_tool(va_request)
-        self.mcp_server.register_tool(journaling_topic)
+        # In the current version of FastMCP, tools are registered using the decorator pattern
+        # Add the tools to the tool manager by decorating them again
+
+        @self.mcp_server.tool(name="follow_up_then", description=follow_up_then.__doc__)
+        async def follow_up_then_wrapper(call):
+            return await follow_up_then(call)
+
+        @self.mcp_server.tool(name="note_to_self", description=note_to_self.__doc__)
+        async def note_to_self_wrapper(call):
+            return await note_to_self(call)
+
+        @self.mcp_server.tool(name="save_url", description=save_url.__doc__)
+        async def save_url_wrapper(call):
+            return await save_url(call)
+
+        @self.mcp_server.tool(name="va_request", description=va_request.__doc__)
+        async def va_request_wrapper(call):
+            return await va_request(call)
+
+        @self.mcp_server.tool(name="journaling_topic", description=journaling_topic.__doc__)
+        async def journaling_topic_wrapper(call):
+            return await journaling_topic(call)
 
     def run(self, host: str = '127.0.0.1', port: int = 5000):
         """

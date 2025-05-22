@@ -5,10 +5,8 @@ This module wraps the FAF tools with MCP decorators to make them available via t
 """
 
 import json
-
-import anyio.to_thread
-from mcp import tool
-from mcp.types import MCPToolCall, MCPToolResult
+import functools
+from typing import Any, Callable, Awaitable, Dict
 
 # Import the original synchronous FAF tool functions
 from src.faf.tools import (
@@ -18,6 +16,27 @@ from src.faf.tools import (
     va_request as va_request_sync,
     journaling_topic as journaling_topic_sync,
 )
+
+import anyio.to_thread
+from mcp.types import CallToolRequestParams as MCPToolCall
+
+# Define our own MCPToolResult since it's not available in mcp.types
+class MCPToolResult:
+    """Result of a tool call."""
+
+    def __init__(self, result: Dict[str, Any]):
+        self.result = result
+
+# Create a tool decorator since it's not directly available
+def tool(func: Callable[..., Awaitable[MCPToolResult]]) -> Callable[..., Awaitable[MCPToolResult]]:
+    """Decorator to mark a function as an MCP tool."""
+    @functools.wraps(func)
+    async def wrapper(call: MCPToolCall) -> MCPToolResult:
+        return await func(call)
+
+    # Store the original function for later registration
+    wrapper.__mcp_tool__ = True
+    return wrapper
 
 
 @tool
