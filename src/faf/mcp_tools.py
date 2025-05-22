@@ -4,10 +4,20 @@ MCP Tools for FAF (Fire And Forget)
 This module wraps the FAF tools with MCP decorators to make them available via the MCP server.
 """
 
-import re
+import json
 
+import anyio.to_thread
 from mcp import tool
 from mcp.types import MCPToolCall, MCPToolResult
+
+# Import the original synchronous FAF tool functions
+from src.faf.tools import (
+    follow_up_then as follow_up_then_sync,
+    note_to_self as note_to_self_sync,
+    save_url as save_url_sync,
+    va_request as va_request_sync,
+    journaling_topic as journaling_topic_sync,
+)
 
 
 @tool
@@ -37,26 +47,15 @@ async def follow_up_then(call: MCPToolCall) -> MCPToolResult:
     date = call.arguments.get("date", "")
     message = call.arguments.get("message", "")
 
-    # Format the date
-    date = date.replace("this", "")
-    date = date.replace(" ", "")
-    date = date.replace(".", "")
-    date = date.replace(",", "")
-    date = date.replace(":", "")
+    # Offload the synchronous function call to a thread pool
+    result_json = await anyio.to_thread.run_sync(
+        follow_up_then_sync, prompt, date, message
+    )
 
-    # Remove "in" if used as "inXday" or "inXweek" or "inXmonth", match the number and the unit
-    date = re.sub(r'in(\d+)(day|week|month)', r'\1\2', date)
+    # Parse the JSON string result
+    result_dict = json.loads(result_json)
 
-    tool_data = {
-        "prompt": prompt,
-        "command": "follow_up_then",
-        "payload": {
-            "date": date,
-            "message": message
-        }
-    }
-
-    return MCPToolResult(result=tool_data)
+    return MCPToolResult(result=result_dict)
 
 
 @tool
@@ -75,15 +74,15 @@ async def note_to_self(call: MCPToolCall) -> MCPToolResult:
     prompt = call.arguments.get("prompt", "")
     message = call.arguments.get("message", "")
 
-    tool_data = {
-        "prompt": prompt,
-        "command": "note_to_self",
-        "payload": {
-            "message": message
-        }
-    }
+    # Offload the synchronous function call to a thread pool
+    result_json = await anyio.to_thread.run_sync(
+        note_to_self_sync, prompt, message
+    )
 
-    return MCPToolResult(result=tool_data)
+    # Parse the JSON string result
+    result_dict = json.loads(result_json)
+
+    return MCPToolResult(result=result_dict)
 
 
 @tool
@@ -101,19 +100,19 @@ async def save_url(call: MCPToolCall) -> MCPToolResult:
     prompt = call.arguments.get("prompt", "")
     url = call.arguments.get("url", "")
 
-    # Check if the input is URL-like
-    if not url.startswith("http") or "." not in url or " " in url:
-        raise ValueError("The input is not a valid URL.")
+    # Offload the synchronous function call to a thread pool
+    result_json = await anyio.to_thread.run_sync(
+        save_url_sync, prompt, url
+    )
 
-    tool_data = {
-        "prompt": prompt,
-        "command": "save_url",
-        "payload": {
-            "url": url
-        }
-    }
+    # Check for error response
+    if result_json.startswith("Error:"):
+        raise ValueError(result_json)
 
-    return MCPToolResult(result=tool_data)
+    # Parse the JSON string result
+    result_dict = json.loads(result_json)
+
+    return MCPToolResult(result=result_dict)
 
 
 @tool
@@ -131,15 +130,15 @@ async def journaling_topic(call: MCPToolCall) -> MCPToolResult:
     prompt = call.arguments.get("prompt", "")
     topic = call.arguments.get("topic", "")
 
-    tool_data = {
-        "prompt": prompt,
-        "command": "journaling_topic",
-        "payload": {
-            "topic": topic
-        }
-    }
+    # Offload the synchronous function call to a thread pool
+    result_json = await anyio.to_thread.run_sync(
+        journaling_topic_sync, prompt, topic
+    )
 
-    return MCPToolResult(result=tool_data)
+    # Parse the JSON string result
+    result_dict = json.loads(result_json)
+
+    return MCPToolResult(result=result_dict)
 
 
 @tool
@@ -161,14 +160,13 @@ async def va_request(call: MCPToolCall) -> MCPToolResult:
     title = call.arguments.get("title", "")
     request = call.arguments.get("request", "")
 
-    tool_data = {
-        "prompt": prompt,
-        "command": "va_request",
-        "payload": {
-            "title": title,
-            "request": request
-        }
-    }
+    # Offload the synchronous function call to a thread pool
+    result_json = await anyio.to_thread.run_sync(
+        va_request_sync, prompt, title, request
+    )
 
-    return MCPToolResult(result=tool_data)
+    # Parse the JSON string result
+    result_dict = json.loads(result_json)
+
+    return MCPToolResult(result=result_dict)
 
