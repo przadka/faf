@@ -23,7 +23,7 @@ from src.faf.mcp_server import mcp
 # Remove custom decorator, MCPToolResult, and manual thread-pool offloading
 
 @mcp.tool()
-async def follow_up_then(call: dict) -> dict:
+async def follow_up_then(prompt: str, date: str, message: str) -> dict:
     """
     Send a follow-up reminder with the given date and message.
     Use ONLY IF there is a specific date provided or
@@ -45,15 +45,12 @@ async def follow_up_then(call: dict) -> dict:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.get("prompt", "")
-    date = call.get("date", "")
-    message = call.get("message", "")
     result_json = follow_up_then_sync(prompt, date, message)
     return json.loads(result_json)
 
 
 @mcp.tool()
-async def note_to_self(call: dict) -> dict:
+async def note_to_self(prompt: str, message: str) -> dict:
     """
     Send a note to user with the given message.
     Useful for simple todos, reminders and short-term follow ups.
@@ -65,14 +62,12 @@ async def note_to_self(call: dict) -> dict:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.get("prompt", "")
-    message = call.get("message", "")
     result_json = note_to_self_sync(prompt, message)
     return json.loads(result_json)
 
 
 @mcp.tool()
-async def save_url(call: dict) -> dict:
+async def save_url(prompt: str, url: str) -> dict:
     """
     Save a URL to a URL list so that I can review it later. Use only if the input is a valid URL.
 
@@ -83,8 +78,6 @@ async def save_url(call: dict) -> dict:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.get("prompt", "")
-    url = call.get("url", "")
     result_json = save_url_sync(prompt, url)
     if result_json.startswith("Error:"):
         raise ValueError(result_json)
@@ -92,7 +85,7 @@ async def save_url(call: dict) -> dict:
 
 
 @mcp.tool()
-async def journaling_topic(call: dict) -> dict:
+async def journaling_topic(prompt: str, topic: str) -> dict:
     """
     Save a journaling topic to the idea list, to write about later.
 
@@ -103,14 +96,12 @@ async def journaling_topic(call: dict) -> dict:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.get("prompt", "")
-    topic = call.get("topic", "")
     result_json = journaling_topic_sync(prompt, topic)
     return json.loads(result_json)
 
 
 @mcp.tool()
-async def va_request(call: dict) -> dict:
+async def va_request(prompt: str, title: str, request: str) -> dict:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a
     virtual assistant or VA. Use ONLY if the prompt includes the words "virtual assistant",
@@ -124,9 +115,6 @@ async def va_request(call: dict) -> dict:
     Returns:
         Tool result with structured data.
     """
-    prompt = call.get("prompt", "")
-    title = call.get("title", "")
-    request = call.get("request", "")
     result_json = va_request_sync(prompt, title, request)
     return json.loads(result_json)
 
