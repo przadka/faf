@@ -13,6 +13,7 @@ At the moment, this is more of a proof-of-concept rather than a production-ready
 - **Command Line Interface**: Easy to integrate with CLI data input.
 - **Grammar and Spell Checking**: The large language model will fix any typos and mistakes in your input, ensuring that the output passed further is in correct English.
 - **Minimal dependency**: Relies primarily on the native OpenAI Assistant API, ensuring a lightweight and efficient operation with minimal setup requirements.
+- **MCP Server**: Provides a Model Context Protocol (MCP) server for integration with MCP-compatible clients.
 
 Currently, FAF recognizes the following requests:
 
@@ -144,6 +145,37 @@ cp scripts/lambda_deploy.example.sh scripts/lambda_deploy.sh
 By default, the script uses a placeholder for the custom rules file path. Edit the script to set your actual path. For convenience, `scripts/lambda_deploy.sh` is gitignored, so your personal deployment script will not be committed.
 
 The script will package the code and dependencies, then run `sam build` and `sam deploy`.
+
+### Running the MCP Server
+
+FAF includes an MCP (Model Context Protocol) server that allows integration with MCP-compatible clients. The MCP server exposes FAF's functionality as tools that can be invoked by MCP clients.
+
+To run the MCP server:
+
+```bash
+# Install MCP dependencies if not already installed
+pip install "mcp[cli]" uvicorn
+
+# Start the server
+faf-mcp --host 127.0.0.1 --port 5000
+```
+
+The MCP server provides the following tools:
+- `follow_up_then` - Send a follow-up reminder with a specific date
+- `note_to_self` - Send a simple note/todo
+- `save_url` - Save a URL for later review
+- `va_request` - Send a request to a virtual assistant
+- `journaling_topic` - Save a journaling topic
+
+You can connect to the server using any MCP-compatible client, or use the MCP CLI for testing:
+
+```bash
+# Test a connection to the server
+mcp capabilities --url http://127.0.0.1:5000
+
+# Execute a tool
+mcp tools execute --url http://127.0.0.1:5000 --tool note_to_self --args '{"prompt": "Test note", "message": "Remember to test the MCP server"}'
+```
 
 ## Contributing
 

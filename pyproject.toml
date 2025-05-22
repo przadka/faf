@@ -15,7 +15,9 @@ dependencies = [
     "python-dotenv",
     "docstring-parser",
     "litellm",
-    "icecream"
+    "icecream",
+    "mcp[cli]",
+    "uvicorn"
 ]
 license = { text = "MIT" }
 classifiers = [
@@ -36,6 +38,7 @@ dev = [
 
 [project.scripts]
 faf = "src.faf.main:main"
+faf-mcp = "src.faf.mcp_server:main"
 
 [tool.ruff]
 line-length = 100
