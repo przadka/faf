@@ -23,7 +23,9 @@ def test_tools_list():
     """Test that tools_list returns all expected tool function names."""
     tool_list = main.tools_list()
     names = [item["function"]["name"] for item in tool_list]
-    assert set(["note_to_self", "save_url", "follow_up_then", "va_request", "journaling_topic"]).issubset(set(names))
+    assert set([
+        "note_to_self", "save_url", "follow_up_then", "va_request", "journaling_topic"
+    ]).issubset(set(names))
 
 def test_call_tool_function_valid():
     """Test that call_tool_function correctly calls a valid tool and returns expected output."""
@@ -78,25 +80,42 @@ def test_improve_user_input_mocked():
         assert result == "Buy milk. #note_to_self"
 
 def test_convert_to_json_mocked():
-    """Test convert_to_json returns the expected JSON output using a mocked LLM response and tool call."""
+    """Test convert_to_json returns the expected JSON output using mocked LLM response 
+    and tool call."""
     with mock.patch("src.faf.main.completion") as mock_completion, \
          mock.patch("src.faf.main.call_tool_function") as mock_call_tool_function:
-        # Mock the LLM response
-        class MockToolCall:
-            function = mock.Mock(name="note_to_self", arguments={"prompt": "Buy milk.", "message": "Buy milk."})
-        class MockMessage:
-            content = ""
-            tool_calls = [MockToolCall()]
+        # Simplify mocking with direct Mock objects
+        mock_function = mock.Mock()
+        mock_function.name = "note_to_self"
+        mock_function.arguments = {"prompt": "Buy milk.", "message": "Buy milk."}
+
+        mock_tool_call = mock.Mock()
+        mock_tool_call.function = mock_function
+
+        mock_message = mock.Mock()
+        mock_message.content = ""
+        mock_message.tool_calls = [mock_tool_call]
+
         mock_completion.return_value = mock.Mock(
-            choices=[mock.Mock(message=MockMessage())],
+            choices=[mock.Mock(message=mock_message)],
             created=123,
             model="fake-model",
             usage=mock.Mock(prompt_tokens=1, completion_tokens=1, total_tokens=2)
         )
-        # Mock the tool function output
-        mock_call_tool_function.return_value = {"tool_call_name": "note_to_self", "output": json.dumps({"command": "note_to_self", "payload": {"message": "Buy milk."}, "prompt": "Buy milk."})}
+        mock_tool_output = {
+            "command": "note_to_self",
+            "payload": {"message": "Buy milk."},
+            "prompt": "Buy milk."
+        }
+        mock_call_tool_function.return_value = {
+            "tool_call_name": "note_to_self",
+            "output": json.dumps(mock_tool_output)
+        }
+
         tools_list_val = main.tools_list()
-        result = main.convert_to_json("Buy milk.", "John", "", "fake-model", tools_list_val)
+        result = main.convert_to_json(
+            "Buy milk.", "John", "", "fake-model", tools_list_val
+        )
         assert result["command"] == "note_to_self"
         assert result["payload"]["message"] == "Buy milk."
         assert result["prompt"] == "Buy milk."
