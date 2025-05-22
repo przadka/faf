@@ -9,24 +9,22 @@ def test_tool_manifest():
     # Create an instance of the MCP server
     server = FafMcpServer()
 
-    # Expected tool names
-    expected_tools = [
-        'follow_up_then',
-        'note_to_self',
-        'save_url',
-        'va_request',
-        'journaling_topic'
-    ]
+    # Tools expected to be registered:
+    # - follow_up_then
+    # - note_to_self
+    # - save_url
+    # - va_request
+    # - journaling_topic
 
     # In the newer FastMCP API, we can't directly access the tools list.
     # Instead, we'll use the fact that the server initializes correctly
     # and doesn't throw any exceptions during initialization as verification
     # that the tools are registered.
-    
+
     # Verify that the server instance is created successfully
     assert isinstance(server, FafMcpServer)
     assert hasattr(server, 'mcp_server')
-    
+
     # The FastMCP class provides a tool decorator which we use, and we know
     # that all of our tools are imported via faf.mcp_tools, so if the server
     # initializes without errors, we can reasonably assume the tools are registered.

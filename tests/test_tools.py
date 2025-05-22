@@ -1,5 +1,4 @@
 import json
-import pytest
 from faf import tools
 
 def test_follow_up_then():
@@ -61,4 +60,4 @@ def test_va_request():
     assert data["command"] == "va_request"
     assert data["payload"]["title"] == title
     assert data["payload"]["request"] == request
-    assert data["prompt"] == prompt 
+    assert data["prompt"] == prompt

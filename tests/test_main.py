@@ -13,7 +13,7 @@ def test_get_tool_function_info():
     assert "parameters" in info["function"]
 
 def test_collect_functions_info():
-    """Test that collect_functions_info returns a list of function metadata for given tool functions."""
+    """Test that collect_functions_info returns a list of function metadata."""
     infos = main.collect_functions_info(tools.note_to_self, tools.save_url)
     assert isinstance(infos, list)
     assert infos[0]["function"]["name"] == "note_to_self"
@@ -42,7 +42,7 @@ def test_call_tool_function_invalid():
         main.call_tool_function(action)
 
 def test_write_to_file_success(monkeypatch):
-    """Test that write_to_file writes a valid JSON string to a file and returns a success message."""
+    """Test that write_to_file writes JSON to a file and returns success message."""
     with tempfile.TemporaryDirectory() as tmpdir:
         monkeypatch.setenv("FAF_JSON_OUTPUT_PATH", tmpdir)
         data = json.dumps({"command": "test", "payload": {"foo": "bar"}})
@@ -57,7 +57,7 @@ def test_write_to_file_invalid_json():
         main.write_to_file("not a json string")
 
 def test_load_configuration(monkeypatch):
-    """Test that load_configuration loads model, user name, and custom rules from environment and file."""
+    """Test that load_configuration loads config from environment and file."""
     monkeypatch.setenv("FAF_MODEL", "test-model")
     monkeypatch.setenv("FAF_USER_NAME", "TestUser")
     # Use a context manager to ensure file cleanup even if assertions fail
@@ -84,8 +84,7 @@ def test_improve_user_input_mocked():
         assert result == "Buy milk. #note_to_self"
 
 def test_convert_to_json_mocked():
-    """Test convert_to_json returns the expected JSON output using mocked LLM response 
-    and tool call."""
+    """Test convert_to_json returns expected JSON using mocked LLM response and tool call."""
     with mock.patch("faf.main.completion") as mock_completion, \
          mock.patch("faf.main.call_tool_function") as mock_call_tool_function:
         # Simplify mocking with direct Mock objects
@@ -124,4 +123,4 @@ def test_convert_to_json_mocked():
         assert result["payload"]["message"] == "Buy milk."
         assert result["prompt"] == "Buy milk."
         assert result["model"] == "fake-model"
-        assert result["created"] == 123 
+        assert result["created"] == 123
