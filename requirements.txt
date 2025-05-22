@@ -6,3 +6,4 @@ pydantic
 docstring-parser
 icecream
 ruff
+pytest

@@ -13,7 +13,7 @@ from docstring_parser import parse
 from litellm import completion
 
 # Local application/library specific imports
-from tools import follow_up_then, save_url, note_to_self, va_request, journaling_topic
+from src.faf.tools import follow_up_then, save_url, note_to_self, va_request, journaling_topic
 
 def get_tool_function_info(tool_func):
     # Parse the docstring using docstring-parser
