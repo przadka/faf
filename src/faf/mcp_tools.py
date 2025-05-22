@@ -19,6 +19,9 @@ from faf.tools import (
     journaling_topic as journaling_topic_sync,
 )
 
+# Import the write_to_file function to actually save JSON files
+from faf.main import write_to_file
+
 # Import the shared FastMCP instance
 from faf.mcp_server import mcp
 
@@ -129,7 +132,16 @@ async def follow_up_then(prompt: str, date: str, message: str) -> dict:
     validate_date_format(date)
     
     result_json = follow_up_then_sync(prompt, date, message)
-    return json.loads(result_json)
+    result_dict = json.loads(result_json)
+    
+    # Save the JSON file to disk
+    try:
+        save_result = write_to_file(result_json)
+        print(f"File saved: {save_result}")
+    except Exception as e:
+        print(f"Failed to save file: {e}")
+    
+    return result_dict
 
 
 @mcp.tool()
@@ -146,6 +158,11 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     Returns:
         Tool result with structured data.
     """
+    # Add debugging
+    import logging
+    logger = logging.getLogger("faf_mcp_tools")
+    logger.info(f"note_to_self called with prompt='{prompt}', message='{message}', priority='{priority}'")
+    
     # Input validation
     validate_non_empty_string(prompt, "Prompt")
     validate_non_empty_string(message, "Message")
@@ -155,13 +172,24 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     
     # For now, we'll ignore the priority parameter in the sync call to maintain backward compatibility
     # but the validation ensures proper input
+    logger.info("Calling note_to_self_sync...")
     result_json = note_to_self_sync(prompt, message)
+    logger.info(f"note_to_self_sync returned: {result_json}")
     result_dict = json.loads(result_json)
     
     # Add priority to the result if specified
     if priority and priority != "normal":
         result_dict["payload"]["priority"] = priority
     
+    # Save the JSON file to disk
+    try:
+        updated_json = json.dumps(result_dict)
+        save_result = write_to_file(updated_json)
+        logger.info(f"File saved: {save_result}")
+    except Exception as e:
+        logger.error(f"Failed to save file: {e}")
+    
+    logger.info(f"Returning result: {result_dict}")
     return result_dict
 
 
@@ -184,7 +212,17 @@ async def save_url(prompt: str, url: str) -> dict:
     result_json = save_url_sync(prompt, url)
     if result_json.startswith("Error:"):
         raise ValueError(result_json)
-    return json.loads(result_json)
+    
+    result_dict = json.loads(result_json)
+    
+    # Save the JSON file to disk
+    try:
+        save_result = write_to_file(result_json)
+        print(f"File saved: {save_result}")
+    except Exception as e:
+        print(f"Failed to save file: {e}")
+    
+    return result_dict
 
 
 @mcp.tool()
@@ -213,6 +251,14 @@ async def journaling_topic(prompt: str, topic: str, category: Optional[str] = No
     # Add category to the result if specified
     if category:
         result_dict["payload"]["category"] = category
+    
+    # Save the JSON file to disk
+    try:
+        updated_json = json.dumps(result_dict)
+        save_result = write_to_file(updated_json)
+        print(f"File saved: {save_result}")
+    except Exception as e:
+        print(f"Failed to save file: {e}")
     
     return result_dict
 
@@ -255,6 +301,14 @@ async def va_request(prompt: str, title: str, request: str, urgency: Optional[st
     # Add urgency to the result if specified
     if urgency and urgency != "normal":
         result_dict["payload"]["urgency"] = urgency
+    
+    # Save the JSON file to disk
+    try:
+        updated_json = json.dumps(result_dict)
+        save_result = write_to_file(updated_json)
+        print(f"File saved: {save_result}")
+    except Exception as e:
+        print(f"Failed to save file: {e}")
     
     return result_dict
 

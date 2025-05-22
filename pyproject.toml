@@ -38,8 +38,8 @@ dev = [
 ]
 
 [project.scripts]
-faf = "src.faf.main:main"
-faf-mcp = "src.faf.mcp_server:main"
+faf = "faf.main:main"
+faf-mcp = "faf.mcp_server:main"
 
 [tool.ruff]
 line-length = 100

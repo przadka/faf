@@ -21,7 +21,7 @@ from faf.main import load_configuration
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("faf_mcp_server")
@@ -65,26 +65,19 @@ class FafMcpServer:
         # Use FastMCP's recommended pattern with explicit transport specification
         self.mcp_server.run(transport="stdio")
 
-    def run_http(self, host: str = '127.0.0.1', port: int = 5000, path: str = "/mcp",
-                 log_level: str = "info"):
+    def run_http(self, mount_path: str = "/mcp"):
         """
         Run the MCP server using streamable HTTP transport.
 
         Args:
-            host: Host address to bind to
-            port: Port to listen on
-            path: URL path to mount the MCP server on
-            log_level: Logging level for the server
+            mount_path: URL path to mount the MCP server on
         """
-        logger.info(f"Starting MCP Server with streamable HTTP transport on {host}:{port}{path}")
+        logger.info(f"Starting MCP Server with streamable HTTP transport on {mount_path}")
 
-        # Use FastMCP's recommended streamable-http transport pattern
+        # Use FastMCP's streamable-http transport
         self.mcp_server.run(
             transport="streamable-http",
-            host=host,
-            port=port,
-            path=path,
-            log_level=log_level
+            mount_path=mount_path
         )
 
 def main():
@@ -95,15 +88,8 @@ def main():
         parser = argparse.ArgumentParser(description='FAF MCP Server')
         parser.add_argument('--transport', choices=['stdio', 'http'], default='stdio',
                           help='Transport protocol to use (default: stdio)')
-        parser.add_argument('--host', default='127.0.0.1',
-                          help='Host to bind to (HTTP transport only)')
-        parser.add_argument('--port', type=int, default=5000,
-                          help='Port to listen on (HTTP transport only)')
-        parser.add_argument('--path', default='/mcp',
+        parser.add_argument('--mount-path', default='/mcp',
                           help='URL path to mount MCP server on (HTTP transport only)')
-        parser.add_argument('--log-level', default='info',
-                          choices=['debug', 'info', 'warning', 'error'],
-                          help='Logging level (default: info)')
         args = parser.parse_args()
 
         # Load environment variables
@@ -123,10 +109,7 @@ def main():
             server.run_stdio()
         else:
             server.run_http(
-                host=args.host,
-                port=args.port,
-                path=args.path,
-                log_level=getattr(args, 'log_level')
+                mount_path=getattr(args, 'mount_path')
             )
 
     except KeyboardInterrupt:
