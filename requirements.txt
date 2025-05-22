@@ -1,9 +1,10 @@
-requests
-pyinstaller
-python-dotenv
+docstring-parser
+fastmcp
+icecream
 litellm==1.37.9
 pydantic
-docstring-parser
-icecream
-ruff
+pyinstaller
 pytest
+python-dotenv
+requests
+ruff
