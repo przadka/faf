@@ -126,6 +126,13 @@ python src/faf/main.py "Your text input here"
 
 ### Deploying to AWS Lambda (Optional)
 
+Before deploying, copy the example SAM config and fill in your own values:
+
+```
+cp samconfig.example.toml samconfig.toml
+# Edit samconfig.toml and set your stack name, region, and S3 prefix
+```
+
 To deploy FAF to AWS Lambda using AWS SAM, use the provided deployment script template:
 
 ```
