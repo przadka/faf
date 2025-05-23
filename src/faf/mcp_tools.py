@@ -5,6 +5,7 @@ This module wraps the FAF tools with MCP decorators to make them available via t
 Includes comprehensive input validation and error handling.
 """
 
+import asyncio
 import json
 from functools import wraps
 from typing import Optional
@@ -44,12 +45,12 @@ async def follow_up_then(prompt: str, date: str, message: str) -> dict:
     validate_non_empty_string(message, "Message")
     validate_date_format(date)
 
-    result_json = follow_up_then_sync(prompt, date, message)
+    result_json = await asyncio.to_thread(follow_up_then_sync, prompt, date, message)
     result_dict = json.loads(result_json)
 
     # Save the JSON file to disk
     try:
-        save_result = write_to_file(result_json)
+        save_result = await asyncio.to_thread(write_to_file, result_json)
         print(f"File saved: {save_result}")
     except Exception as e:
         print(f"Failed to save file: {e}")
@@ -78,7 +79,7 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     # backward compatibility
     # but the validation ensures proper input
     logger.info("Calling note_to_self_sync...")
-    result_json = note_to_self_sync(prompt, message)
+    result_json = await asyncio.to_thread(note_to_self_sync, prompt, message)
     logger.info(f"note_to_self_sync returned: {result_json}")
     result_dict = json.loads(result_json)
 
@@ -89,7 +90,7 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     # Save the JSON file to disk
     try:
         updated_json = json.dumps(result_dict)
-        save_result = write_to_file(updated_json)
+        save_result = await asyncio.to_thread(write_to_file, updated_json)
         logger.info(f"File saved: {save_result}")
     except Exception as e:
         logger.error(f"Failed to save file: {e}")
@@ -105,7 +106,7 @@ async def save_url(prompt: str, url: str) -> dict:
     validate_non_empty_string(prompt, "Prompt")
     validate_url(url)
 
-    result_json = save_url_sync(prompt, url)
+    result_json = await asyncio.to_thread(save_url_sync, prompt, url)
     if result_json.startswith("Error:"):
         raise ValueError(result_json)
 
@@ -113,7 +114,7 @@ async def save_url(prompt: str, url: str) -> dict:
 
     # Save the JSON file to disk
     try:
-        save_result = write_to_file(result_json)
+        save_result = await asyncio.to_thread(write_to_file, result_json)
         print(f"File saved: {save_result}")
     except Exception as e:
         print(f"Failed to save file: {e}")
@@ -131,7 +132,7 @@ async def journaling_topic(prompt: str, topic: str, category: Optional[str] = No
     if category is not None:
         validate_non_empty_string(category, "Category")
 
-    result_json = journaling_topic_sync(prompt, topic)
+    result_json = await asyncio.to_thread(journaling_topic_sync, prompt, topic)
     result_dict = json.loads(result_json)
 
     # Add category to the result if specified
@@ -141,7 +142,7 @@ async def journaling_topic(prompt: str, topic: str, category: Optional[str] = No
     # Save the JSON file to disk
     try:
         updated_json = json.dumps(result_dict)
-        save_result = write_to_file(updated_json)
+        save_result = await asyncio.to_thread(write_to_file, updated_json)
         print(f"File saved: {save_result}")
     except Exception as e:
         print(f"Failed to save file: {e}")
@@ -172,7 +173,7 @@ async def va_request(
             "Title should be short (100 characters or less) for Trello card compatibility"
         )
 
-    result_json = va_request_sync(prompt, title, request)
+    result_json = await asyncio.to_thread(va_request_sync, prompt, title, request)
     result_dict = json.loads(result_json)
 
     # Add urgency to the result if specified
@@ -182,7 +183,7 @@ async def va_request(
     # Save the JSON file to disk
     try:
         updated_json = json.dumps(result_dict)
-        save_result = write_to_file(updated_json)
+        save_result = await asyncio.to_thread(write_to_file, updated_json)
         print(f"File saved: {save_result}")
     except Exception as e:
         print(f"Failed to save file: {e}")
