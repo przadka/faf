@@ -87,7 +87,7 @@ Inputs can range from simple tasks, such as "Buy milk", to more complex instruct
 You can customize FAF behavior using the following environment variables:
 
 - `FAF_USER_NAME` - is a string representing the username. FAF will try to use that name when executing tasks. This parameter is optional.
-- `FAF_CUSTOM_RULES_FILE` - is a path to an MD file which stores additional rules that allow you to further customize how FAF responds to your request. The instructions should be provided as a well-formatted markdown list, for example:
+- `FAF_CUSTOM_RULES_FILE` - is a path to an MD file which stores additional rules that allow you to further customize how FAF responds to your request. The instructions should be provided as a well-formatted Markdown list, for example:
 
 ```markdown
 - If the user mentions Multischool, Multi or simply "school" , make sure you use the MT prefix in your content. Example: "MT - Follow up with the teacher about the new project.".
@@ -293,7 +293,7 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
    Error: Permission denied: python
    ```
    **Solutions:** 
-   - Use full path to python: `/usr/bin/python3` or `/path/to/venv/bin/python`
+   - Use the full path to python: `/usr/bin/python3` or `/path/to/venv/bin/python`
    - Ensure the FAF directory and files are readable
    - On macOS, grant Terminal/Claude Desktop appropriate permissions
 
@@ -313,7 +313,7 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
 - Test the MCP server standalone before configuring with clients: `faf-mcp --transport stdio`
 - Use `faf-mcp --transport stdio` to test server startup and tool availability
 - Check that JSON output files are being created in `FAF_JSON_OUTPUT_PATH`
-- Verify OpenAI API key works by testing FAF CLI directly first
+- Verify the OpenAI API key works by testing FAF CLI directly first
 
 **Environment Variable Requirements:**
 
