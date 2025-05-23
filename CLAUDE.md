@@ -62,7 +62,7 @@ python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --pat
 
 ### MCP Client Configuration
 
-For Claude Desktop, add to configuration file:
+For Claude Desktop, add to the configuration file:
 ```json
 {
   "mcpServers": {

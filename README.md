@@ -273,13 +273,13 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
 **Common Issues and Solutions:**
 
 1. **Server fails to start:**
-   ```
+   ```bash
    Error: Could not import FastMCP
    ```
    **Solution:** Install FastMCP: `pip install fastmcp`
 
 2. **Environment variables not found:**
-   ```
+   ```bash
    Error: OPENAI_API_KEY not set
    ```
    **Solution:** Ensure all required environment variables are set in the MCP client configuration, not just in your shell.
@@ -291,7 +291,7 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
    - Check Claude Desktop logs for specific error messages
 
 4. **Permission denied errors:**
-   ```
+   ```bash
    Error: Permission denied: python
    ```
    **Solutions:** 
@@ -305,7 +305,7 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
    - Ensure `FAF_JSON_OUTPUT_PATH` directory exists and is writable
 
 6. **Module not found errors:**
-   ```
+   ```python
    ModuleNotFoundError: No module named 'faf'
    ```
    **Solution:** Run from the correct directory or use absolute paths, or install FAF in development mode: `pip install -e .`
