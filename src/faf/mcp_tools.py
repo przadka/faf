@@ -7,6 +7,7 @@ Includes comprehensive input validation and error handling.
 
 import asyncio
 import json
+import logging
 from functools import wraps
 from typing import Optional
 
@@ -33,6 +34,9 @@ from faf.validation import (
 
 # Import the shared FastMCP instance
 from faf.mcp_server import mcp
+
+# Set up module-level logger
+logger = logging.getLogger("faf_mcp_tools")
 
 
 
@@ -61,9 +65,6 @@ async def follow_up_then(prompt: str, date: str, message: str) -> dict:
 @mcp.tool()
 @wraps(note_to_self_sync)
 async def note_to_self(prompt: str, message: str, priority: Optional[str] = "normal") -> dict:
-    # Add debugging
-    import logging
-    logger = logging.getLogger("faf_mcp_tools")
     logger.info(
         f"note_to_self called with prompt='{prompt}', message='{message}', priority='{priority}'"
     )
@@ -85,7 +86,7 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
 
     # Add priority to the result if specified
     if priority and priority != "normal":
-        result_dict["payload"]["priority"] = priority
+        result_dict.setdefault("payload", {})["priority"] = priority
 
     # Save the JSON file to disk
     try:
@@ -137,7 +138,7 @@ async def journaling_topic(prompt: str, topic: str, category: Optional[str] = No
 
     # Add category to the result if specified
     if category:
-        result_dict["payload"]["category"] = category
+        result_dict.setdefault("payload", {})["category"] = category
 
     # Save the JSON file to disk
     try:
@@ -178,7 +179,7 @@ async def va_request(
 
     # Add urgency to the result if specified
     if urgency and urgency != "normal":
-        result_dict["payload"]["urgency"] = urgency
+        result_dict.setdefault("payload", {})["urgency"] = urgency
 
     # Save the JSON file to disk
     try:
