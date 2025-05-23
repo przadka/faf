@@ -29,7 +29,7 @@ logger = logging.getLogger("faf_mcp_server")
 # MCP server configuration
 SERVER_NAME = "faf-mcp-server"
 SERVER_VERSION = "0.1.0"
-SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF) command-line tool"
+SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF)"
 
 # Create the FastMCP instance at the module level for use by decorators
 mcp = FastMCP(SERVER_NAME)
