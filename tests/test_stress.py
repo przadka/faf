@@ -83,13 +83,19 @@ async def stress_test(url: str, num_requests: int, concurrency: int) -> Dict:
             print(f"Completed {batch_start + batch_size}/{num_requests} requests")
 
     # Calculate statistics
+    sorted_durations = sorted(durations)
+    
+    # Calculate percentiles using explicit index calculation
+    p95_index = int(len(sorted_durations) * 0.95)
+    p99_index = int(len(sorted_durations) * 0.99)
+    
     stats = {
         "min_ms": min(durations),
         "max_ms": max(durations),
         "avg_ms": statistics.mean(durations),
         "median_ms": statistics.median(durations),
-        "p95_ms": statistics.quantiles(durations, n=20)[18],  # 95th percentile
-        "p99_ms": statistics.quantiles(durations, n=100)[98],  # 99th percentile
+        "p95_ms": sorted_durations[p95_index],  # 95th percentile
+        "p99_ms": sorted_durations[p99_index],  # 99th percentile
         "num_requests": num_requests,
         "concurrency": concurrency
     }
