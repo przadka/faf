@@ -360,7 +360,7 @@ class TestMcpToolsValidation:
 
     def test_validation_functions(self):
         """Test individual validation functions."""
-        from faf.mcp_tools import (
+        from faf.validation import (
             validate_non_empty_string, validate_url, validate_date_format,
             validate_priority, validate_va_keywords
         )
