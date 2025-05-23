@@ -1,1 +1,30 @@
 https://chatgpt.com/c/682eb4dc-2c5c-8003-a2fb-76578895e215
+
+whats the difference
+
+python src/faf/mcp_server.py
+
+vs 
+
+faf-mcp command?
+
+my current cursor ide uses command
+
+
+> functionality as tools that can be invoked by MCP clients.
+
+tools translate request to JSONs file which are storred in a preferred location for further processing, integrations
+
+> fastmcp[cli]
+
+do we use cli?
+
+> SERVER_DESCRIPTION = "MCP server for Fire And Forget (FAF) command-line tool"
+
+command line - remove
+
+> def validate_non_empty_string(value: str, field_name: str) -> None:
+
+validation logic should be part of the main faf not mcp i think
+
+dosctring - how to share them - copy them from the main code?

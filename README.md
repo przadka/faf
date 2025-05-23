@@ -43,13 +43,13 @@ Before getting started, make sure you have the following:
 
 1. **Clone the repository:**
 
-```
+```bash
 git clone https://github.com/przadka/faf.git
 ```
 
 2. **Set up a virtual environment and activate it:**
 
-```
+```bash
 pip install virtualenv
 virtualenv venv
 source venv/bin/activate
@@ -57,7 +57,7 @@ source venv/bin/activate
 
 3. **Install the necessary dependencies:**
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -65,7 +65,7 @@ pip install -r requirements.txt
 
 FAF uses the following environment variables: 
 
-```
+```bash
 export OPENAI_API_KEY=your_openai_api_key
 export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
 export FAF_USER_NAME="John" # optional
@@ -78,7 +78,7 @@ export FAF_CUSTOM_RULES_FILE="/path/to/custom/rules/file.md" # optional
 
 Once your environment is set up and the necessary environment variables are defined, you can use FAF like so:
 
-```
+```bash
 python src/faf/main.py "Your text input here"
 ```
 
@@ -86,10 +86,10 @@ Inputs can range from simple tasks, such as "Buy milk", to more complex instruct
 
 You can customize FAF behavior using the following environment variables:
 
-- `FAF_USER_NAME` - is a string representing the user name. FAF will try to use that name when executing tasks. This parameter is optional.
+- `FAF_USER_NAME` - is a string representing the username. FAF will try to use that name when executing tasks. This parameter is optional.
 - `FAF_CUSTOM_RULES_FILE` - is a path to an MD file which stores additional rules that allow you to further customize how FAF responds to your request. The instructions should be provided as a well-formatted markdown list, for example:
 
-```
+```markdown
 - If the user mentions Multischool, Multi or simply "school" , make sure you use the MT prefix in your content. Example: "MT - Follow up with the teacher about the new project.".
 - If Multischool, Multi or school is not mentioned, YOU ARE NOT ALLOWED to use the MT prefix.
 - The user's wife's name is Kavita. Try to use Kavita rather than just "wife" in your content.
@@ -99,7 +99,7 @@ You can customize FAF behavior using the following environment variables:
 
 If you wish to package FAF into a single executable file for easier distribution or deployment across your operating system, follow the steps below:
 
-```
+```bash
 nox -s package
 ```
 
@@ -121,7 +121,7 @@ FAF can be run locally as a standard Python CLI tool, or optionally deployed to 
 
 After installing dependencies and setting environment variables as described above, you can run FAF directly:
 
-```
+```bash
 python src/faf/main.py "Your text input here"
 ```
 
@@ -129,14 +129,14 @@ python src/faf/main.py "Your text input here"
 
 Before deploying, copy the example SAM config and fill in your own values:
 
-```
+```bash
 cp samconfig.example.toml samconfig.toml
 # Edit samconfig.toml and set your stack name, region, and S3 prefix
 ```
 
 To deploy FAF to AWS Lambda using AWS SAM, use the provided deployment script template:
 
-```
+```bash
 cp scripts/lambda_deploy.example.sh scripts/lambda_deploy.sh
 # Edit scripts/lambda_deploy.sh and fill in your own values
 ./scripts/lambda_deploy.sh
@@ -248,7 +248,7 @@ python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --pat
 
 The MCP server provides the following tools:
 - `follow_up_then` - Send a follow-up reminder with a specific date
-- `note_to_self` - Send a simple note/todo
+- `note_to_self` - Send a simple note/to-do
 - `save_url` - Save a URL for later review
 - `va_request` - Send a request to a virtual assistant
 - `journaling_topic` - Save a journaling topic
@@ -322,7 +322,7 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
 All MCP client configurations must include these environment variables:
 - `OPENAI_API_KEY` (required): Your OpenAI API key
 - `FAF_JSON_OUTPUT_PATH` (required): Directory for JSON output files
-- `FAF_USER_NAME` (optional): User name for personalization
+- `FAF_USER_NAME` (optional): Username for personalization
 - `FAF_CUSTOM_RULES_FILE` (optional): Path to custom rules file
 
 ## Contributing

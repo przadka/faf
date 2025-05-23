@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Fire And Forget (FAF) is a command-line tool for productivity that helps with GTD (Getting Things Done) workflows by capturing and processing text input using a large language model (LLM). It structures data as JSON objects that can be uploaded to storage services and processed with automation tools like Zapier.
 
 FAF can process different types of requests including:
-- Notes to self (simple todos)
+- Notes to self (simple to-dos)
 - Follow-up reminders with date/time references
 - URL saving for later review
 - Virtual assistant requests
@@ -16,7 +16,7 @@ FAF can process different types of requests including:
 ## Environment Setup
 
 FAF requires the following environment variables:
-```
+```bash
 export OPENAI_API_KEY=your_openai_api_key
 export FAF_JSON_OUTPUT_PATH=/path/to/your/desired/folder
 export FAF_USER_NAME="John" # optional
@@ -123,7 +123,7 @@ cp scripts/lambda_deploy.example.sh scripts/lambda_deploy.sh
 2. **Tools Module** (`src/faf/tools.py`):
    - Defines the core functions that process different request types:
      - `follow_up_then`: For scheduling reminders
-     - `note_to_self`: For simple notes/todos
+     - `note_to_self`: For simple notes/to-dos
      - `save_url`: For saving URLs for later
      - `va_request`: For virtual assistant requests
      - `journaling_topic`: For saving journaling ideas
