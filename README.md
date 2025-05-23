@@ -55,10 +55,10 @@ virtualenv venv
 source venv/bin/activate
 ```
 
-3. **Install the necessary dependencies:**
+3. **Install the package in development mode:**
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 4. **Set the required environment variables:**
@@ -79,7 +79,7 @@ export FAF_CUSTOM_RULES_FILE="/path/to/custom/rules/file.md" # optional
 Once your environment is set up and the necessary environment variables are defined, you can use FAF like so:
 
 ```bash
-python src/faf/main.py "Your text input here"
+faf "Your text input here"
 ```
 
 Inputs can range from simple tasks, such as "Buy milk", to more complex instructions like "Follow up with John in 3 weeks about sales meeting". The processed results will be saved as JSON files, which can be uploaded to your cloud storage for further actions.
@@ -119,10 +119,10 @@ FAF can be run locally as a standard Python CLI tool, or optionally deployed to 
 
 ### Running Locally
 
-After installing dependencies and setting environment variables as described above, you can run FAF directly:
+After installing the package and setting environment variables as described above, you can run FAF directly:
 
 ```bash
-python src/faf/main.py "Your text input here"
+faf "Your text input here"
 ```
 
 ### Deploying to AWS Lambda (Optional)
@@ -148,7 +148,7 @@ The script will package the code and dependencies, then run `sam build` and `sam
 
 ### Running the MCP Server
 
-FAF includes an MCP (Model Context Protocol) server that allows integration with MCP-compatible clients. The MCP server exposes FAF's functionality as tools that can be invoked by MCP clients.
+FAF includes an MCP (Model Context Protocol) server that allows integration with MCP-compatible clients. The MCP server exposes FAF's functionality as tools that translate requests into JSON files, which are stored in a specified location for further processing by integrations like Zapier, Google Sheets, and other automation tools.
 
 The server supports two transport protocols:
 
@@ -158,10 +158,10 @@ Stdio transport is the preferred method for local development and desktop applic
 
 ```bash
 # Start the server with stdio transport (default)
-python src/faf/mcp_server.py
+faf-mcp
 
 # Or explicitly specify stdio transport
-python src/faf/mcp_server.py --transport stdio
+faf-mcp --transport stdio
 ```
 
 #### MCP Client Configuration
@@ -174,8 +174,7 @@ Add this to your Claude Desktop configuration file (`~/Library/Application Suppo
 {
   "mcpServers": {
     "faf": {
-      "command": "python",
-      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
+      "command": "faf-mcp",
       "env": {
         "OPENAI_API_KEY": "your_openai_api_key",
         "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder",
@@ -209,8 +208,8 @@ For HTTP transport:
 {
   "mcpServers": {
     "faf": {
-      "command": "python",
-      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py", "--transport", "http", "--host", "127.0.0.1", "--port", "5000"],
+      "command": "faf-mcp",
+      "args": ["--transport", "http", "--host", "127.0.0.1", "--port", "5000"],
       "env": {
         "OPENAI_API_KEY": "your_openai_api_key",
         "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder"
@@ -225,8 +224,7 @@ For HTTP transport:
 For stdio transport (most common):
 ```json
 {
-  "command": "python",
-  "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
+  "command": "faf-mcp",
   "env": {
     "OPENAI_API_KEY": "your_openai_api_key",
     "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder"
@@ -240,10 +238,10 @@ HTTP transport uses FastMCP's streamable-http protocol for remote deployments an
 
 ```bash
 # Start the server with HTTP transport (uses streamable-http)
-python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
+faf-mcp --transport http --host 127.0.0.1 --port 5000
 
 # Customize the mount path and logging level
-python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
+faf-mcp --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
 ```
 
 The MCP server provides the following tools:
@@ -308,12 +306,12 @@ curl -X POST http://127.0.0.1:5000/faf -H "Content-Type: application/json" -d '{
    ```python
    ModuleNotFoundError: No module named 'faf'
    ```
-   **Solution:** Run from the correct directory or use absolute paths, or install FAF in development mode: `pip install -e .`
+   **Solution:** Install FAF in development mode: `pip install -e .`
 
 **Debugging Tips:**
 
-- Test the MCP server standalone before configuring with clients
-- Use `--transport stdio` to test server startup and tool availability
+- Test the MCP server standalone before configuring with clients: `faf-mcp --transport stdio`
+- Use `faf-mcp --transport stdio` to test server startup and tool availability
 - Check that JSON output files are being created in `FAF_JSON_OUTPUT_PATH`
 - Verify OpenAI API key works by testing FAF CLI directly first
 

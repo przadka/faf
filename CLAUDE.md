@@ -36,28 +36,28 @@ pip install virtualenv
 virtualenv venv
 source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install package in development mode
+pip install -e .
 ```
 
 ### Running the Application
 
 ```bash
 # Run FAF with input
-python src/faf/main.py "Your text input here"
+faf "Your text input here"
 ```
 
 ### Running the MCP Server
 
 ```bash
 # Start the MCP server with stdio transport (default, recommended for desktop clients)
-python src/faf/mcp_server.py
+faf-mcp
 
 # Start the MCP server with HTTP transport (uses streamable-http protocol)
-python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000
+faf-mcp --transport http --host 127.0.0.1 --port 5000
 
 # Customize path and logging level
-python src/faf/mcp_server.py --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
+faf-mcp --transport http --host 127.0.0.1 --port 5000 --path /faf --log-level debug
 ```
 
 ### MCP Client Configuration
@@ -67,8 +67,7 @@ For Claude Desktop, add to the configuration file:
 {
   "mcpServers": {
     "faf": {
-      "command": "python",
-      "args": ["/absolute/path/to/faf/src/faf/mcp_server.py"],
+      "command": "faf-mcp",
       "env": {
         "OPENAI_API_KEY": "your_openai_api_key",
         "FAF_JSON_OUTPUT_PATH": "/absolute/path/to/your/output/folder",
