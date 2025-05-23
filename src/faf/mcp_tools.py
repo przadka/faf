@@ -99,7 +99,9 @@ def validate_va_keywords(prompt: str) -> None:
     va_keywords = ["virtual assistant", "v assistant", "va"]
 
     if not any(keyword in prompt_lower for keyword in va_keywords):
-        raise ValueError("VA requests must include 'virtual assistant', 'v assistant', or 'VA' in the prompt")
+        raise ValueError(
+            "VA requests must include 'virtual assistant', 'v assistant', or 'VA' in the prompt"
+        )
 
 @mcp.tool()
 async def follow_up_then(prompt: str, date: str, message: str) -> dict:
@@ -160,7 +162,9 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     # Add debugging
     import logging
     logger = logging.getLogger("faf_mcp_tools")
-    logger.info(f"note_to_self called with prompt='{prompt}', message='{message}', priority='{priority}'")
+    logger.info(
+        f"note_to_self called with prompt='{prompt}', message='{message}', priority='{priority}'"
+    )
 
     # Input validation
     validate_non_empty_string(prompt, "Prompt")
@@ -169,7 +173,8 @@ async def note_to_self(prompt: str, message: str, priority: Optional[str] = "nor
     if priority is not None:
         validate_priority(priority)
 
-    # For now, we'll ignore the priority parameter in the sync call to maintain backward compatibility
+    # For now, we'll ignore the priority parameter in the sync call to maintain
+    # backward compatibility
     # but the validation ensures proper input
     logger.info("Calling note_to_self_sync...")
     result_json = note_to_self_sync(prompt, message)
@@ -263,7 +268,9 @@ async def journaling_topic(prompt: str, topic: str, category: Optional[str] = No
 
 
 @mcp.tool()
-async def va_request(prompt: str, title: str, request: str, urgency: Optional[str] = "normal") -> dict:
+async def va_request(
+    prompt: str, title: str, request: str, urgency: Optional[str] = "normal"
+) -> dict:
     """
     Send a request to the VA with the given message. Use only if the input explicitly asks for a
     virtual assistant or VA. Use ONLY if the prompt includes the words "virtual assistant",
@@ -292,7 +299,9 @@ async def va_request(prompt: str, title: str, request: str, urgency: Optional[st
 
     # Validate title length (should be short for Trello card)
     if len(title) > 100:
-        raise ValueError("Title should be short (100 characters or less) for Trello card compatibility")
+        raise ValueError(
+            "Title should be short (100 characters or less) for Trello card compatibility"
+        )
 
     result_json = va_request_sync(prompt, title, request)
     result_dict = json.loads(result_json)

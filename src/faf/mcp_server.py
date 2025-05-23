@@ -92,9 +92,6 @@ def main():
                           help='URL path to mount MCP server on (HTTP transport only)')
         args = parser.parse_args()
 
-        # Load environment variables
-        import dotenv
-        dotenv.load_dotenv()
 
         # Ensure required environment variables are set
         if not os.getenv('OPENAI_API_KEY'):

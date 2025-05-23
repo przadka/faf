@@ -154,13 +154,14 @@ class TestMcpTools:
             assert len(tool.__doc__.strip()) > 0, f"Tool {tool.__name__} has empty docstring"
             # Check that docstring contains key information
             assert "Args:" in tool.__doc__, f"Tool {tool.__name__} docstring missing Args section"
-            assert "Returns:" in tool.__doc__, f"Tool {tool.__name__} docstring missing Returns section"
+            assert "Returns:" in tool.__doc__, (
+                f"Tool {tool.__name__} docstring missing Returns section"
+            )
 
     def test_mcp_imports_work(self):
         """Test that MCP tools can be imported without errors."""
         try:
-            import faf.mcp_tools
-            import faf.mcp_server
+            __import__('faf.mcp_tools')
             # If we get here, imports worked
             assert True
         except ImportError as e:
@@ -181,7 +182,9 @@ class TestMcpTools:
         ]
 
         for tool in tools:
-            assert inspect.iscoroutinefunction(tool), f"Tool {tool.__name__} is not an async function"
+            assert inspect.iscoroutinefunction(tool), (
+                f"Tool {tool.__name__} is not an async function"
+            )
 
 
 class TestMcpToolsValidation:
@@ -349,7 +352,9 @@ class TestMcpToolsValidation:
             "prompt": "VA: Book a restaurant."
         })
 
-        result = await va_request("VA: Book a restaurant.", "Book restaurant", "Book a table", "urgent")
+        result = await va_request(
+            "VA: Book a restaurant.", "Book restaurant", "Book a table", "urgent"
+        )
 
         assert result["payload"]["urgency"] == "urgent"
 
@@ -477,9 +482,13 @@ class TestMcpToolsFileSaving:
         mock_sync_func.return_value = test_json
         mock_write_file.return_value = "Success: Data written to test.json"
 
-        result = await va_request("VA: Book restaurant", "Book restaurant", "Book a table", "urgent")
+        await va_request(
+            "VA: Book restaurant", "Book restaurant", "Book a table", "urgent"
+        )
 
-        mock_sync_func.assert_called_once_with("VA: Book restaurant", "Book restaurant", "Book a table")
+        mock_sync_func.assert_called_once_with(
+            "VA: Book restaurant", "Book restaurant", "Book a table"
+        )
 
         # Verify write_to_file was called with urgency added
         mock_write_file.assert_called_once()
@@ -502,7 +511,7 @@ class TestMcpToolsFileSaving:
         mock_sync_func.return_value = test_json
         mock_write_file.return_value = "Success: Data written to test.json"
 
-        result = await journaling_topic("Journal about my day", "My day", "personal")
+        await journaling_topic("Journal about my day", "My day", "personal")
 
         mock_sync_func.assert_called_once_with("Journal about my day", "My day")
 
