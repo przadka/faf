@@ -10,16 +10,12 @@ def test_tool_manifest():
     server = FafMcpServer()
 
     # Tools expected to be registered:
-    # - follow_up_then
-    # - note_to_self
-    # - save_url
-    # - va_request
-    # - journaling_topic
+    # expected_tools = ["follow_up_then", "note_to_self", "save_url",
+    #                   "va_request", "journaling_topic"]
 
-    # In the newer FastMCP API, we can't directly access the tools list.
-    # Instead, we'll use the fact that the server initializes correctly
-    # and doesn't throw any exceptions during initialization as verification
-    # that the tools are registered.
+    # LIMITATION: Current FastMCP API doesn't provide direct access to registered tools
+    # This test verifies server initialization as an indirect confirmation of tool registration
+    # since tools are registered via decorators during module import.
 
     # Verify that the server instance is created successfully
     assert isinstance(server, FafMcpServer)
@@ -28,6 +24,30 @@ def test_tool_manifest():
     # The FastMCP class provides a tool decorator which we use, and we know
     # that all of our tools are imported via faf.mcp_tools, so if the server
     # initializes without errors, we can reasonably assume the tools are registered.
-    # If we needed to verify specific tools in the future, we could add a method
-    # to FastMCP to return the registered tools.
+
+    # TODO: Enhance this test when FastMCP API evolves to support tool inspection
+    # Future enhancement could look like:
+    # if hasattr(server.mcp_server, 'get_registered_tools'):
+    #     tools = server.mcp_server.get_registered_tools()
+    #     for tool in expected_tools:
+    #         assert tool in tools, f"Tool '{tool}' is not registered"
+
+
+def test_tool_manifest_detailed():
+    """
+    Future enhancement for detailed tool verification.
+
+    This test is commented out as it depends on FastMCP API evolution.
+    Uncomment and modify when the API supports tool inspection.
+    """
+    # server = FafMcpServer()
+    # # Hypothetical future API method to get registered tools
+    # tools = server.get_registered_tools()
+    #
+    # # Verify all expected tools are registered
+    # expected_tools = ["follow_up_then", "note_to_self", "save_url",
+    #                   "va_request", "journaling_topic"]
+    # for tool in expected_tools:
+    #     assert tool in tools, f"Tool '{tool}' is not registered"
+    pass
 
