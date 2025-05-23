@@ -40,17 +40,24 @@ async def make_request(client: httpx.AsyncClient, request_id: int) -> float:
     }
 
     # Send the request
-    response = await client.post("/mcp", json=data)
-
-    # Calculate the time taken
-    end_time = time.time()
-    duration_ms = (end_time - start_time) * 1000
-
-    # Ensure the response is valid
-    if response.status_code != 200:
-        print(f"Request {request_id} failed with status {response.status_code}: {response.text}")
-
-    return duration_ms
+    try:
+        response = await client.post("/mcp", json=data, timeout=10.0)
+        
+        # Calculate the time taken
+        end_time = time.time()
+        duration_ms = (end_time - start_time) * 1000
+        
+        # Ensure the response is valid
+        if response.status_code != 200:
+            print(f"Request {request_id} failed with status {response.status_code}: {response.text}")
+            
+        return duration_ms
+    except httpx.TimeoutException:
+        print(f"Request {request_id} timed out")
+        return float('inf')  # Return infinity to indicate timeout
+    except Exception as e:
+        print(f"Request {request_id} failed with error: {str(e)}")
+        return float('inf')  # Return infinity to indicate error
 
 
 async def stress_test(url: str, num_requests: int, concurrency: int) -> Dict:
