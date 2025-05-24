@@ -53,7 +53,7 @@ def follow_up_then(prompt:str, date: str, message: str) -> str:
 def note_to_self(prompt:str, message: str) -> str:
     """
     Send a note to user with the given message.
-    Useful for simple todos, reminders and short-term follow ups.
+    Useful for simple to-dos, reminders and short-term follow ups.
 
     Args:
         prompt: Full input provided by the user, exactly as it was typed.

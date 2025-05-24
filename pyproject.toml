@@ -15,7 +15,10 @@ dependencies = [
     "python-dotenv",
     "docstring-parser",
     "litellm",
-    "icecream"
+    "icecream",
+    "fastmcp[cli]",  # Include CLI tools for linting and testing
+    "uvicorn",
+    "anyio>=4.0.0"
 ]
 license = { text = "MIT" }
 classifiers = [
@@ -35,7 +38,8 @@ dev = [
 ]
 
 [project.scripts]
-faf = "src.faf.main:main"
+faf = "faf.main:main"
+faf-mcp = "faf.mcp_server:main"
 
 [tool.ruff]
 line-length = 100

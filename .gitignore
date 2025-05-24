@@ -43,3 +43,6 @@ event.json
 template.yml
 samconfig.toml
 lambda_deploy.sh
+
+# virtual environment
+venv/

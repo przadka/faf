@@ -1,6 +1,5 @@
 import json
-import pytest
-from src.faf import tools
+from faf import tools
 
 def test_follow_up_then():
     """Test that follow_up_then returns the correct JSON structure for a follow-up reminder."""
@@ -61,4 +60,4 @@ def test_va_request():
     assert data["command"] == "va_request"
     assert data["payload"]["title"] == title
     assert data["payload"]["request"] == request
-    assert data["prompt"] == prompt 
+    assert data["prompt"] == prompt
